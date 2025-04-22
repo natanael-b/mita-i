@@ -52,17 +52,9 @@ im-config
 partitionmanager
 kde-config-tablet
 usb-creator-kde
-ktorrent
 krdc
 plasma-welcome
 neochat
-################################################
-#
-#     Utilitários PulseAudio
-#
-################################################
-pavucontrol-qt
-pavucontrol-qt-l10n # Deveria sair
 ################################################
 #
 #     Instalador calamares
@@ -73,14 +65,6 @@ calamares-settings-kubuntu
 calamares-settings-ubuntu-common
 ################################################
 #
-#     Ícones
-#
-################################################
-ubuntu-mono
-humanity-icon-theme
-adwaita-icon-theme
-################################################
-#
 #     Recursos e serviços da Canonical
 #
 ################################################
@@ -88,9 +72,9 @@ unattended-upgrades
 ubuntu-advantage-tools
 ubuntu-drivers-common
 ubuntu-kernel-accessories
-ubuntu-keyring
+# ubuntu-keyring
 ubuntu-minimal
-ubuntu-mono
+# ubuntu-mono
 ubuntu-pro-client
 ubuntu-pro-client-l10n
 ubuntu-release-upgrader-core
