@@ -1,1 +1,24 @@
 # Pacotes para serem instalados a partir dos repositórios do Ubuntu
+################################################
+#
+#     GRUB
+#
+################################################
+grub-common
+grub-pc-bin
+grub-efi
+grub-efi-amd64-signed
+################################################
+#
+#     Formatação de disco
+#
+################################################
+gdisk
+dosfstools
+################################################
+#
+#     (Des)compactação de arquivo
+#
+################################################
+squashfs-tools
+libarchive-tools
