@@ -25,6 +25,12 @@ libreoffice-uiconfig-writer
 libreoffice-writer
 ################################################
 #
+#     Firefox
+#
+################################################
+firefox
+################################################
+#
 #     Apport
 #
 ################################################
@@ -80,3 +86,5 @@ ubuntu-pro-client-l10n
 ubuntu-release-upgrader-core
 ubuntu-release-upgrader-qt
 ubuntu-standard
+snapd
+
