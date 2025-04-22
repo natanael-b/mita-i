@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 
-name="TigerOS.24"
-user="live"
-host="tiger"
-grub_name="Mita'i OS - Build $(date +%s)"
-splash="quiet"
-keyboard="br"
-base="24.04"
+source . "distro.ini"
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 iso_repository="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/"
