@@ -20,6 +20,7 @@ current_step=0
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
+# xorriso mtools dosfstools
 function download-image {
     current_step=$((current_step+1))
     echo
@@ -52,6 +53,11 @@ function extract-image {
     ln -s chroot/ squashfs-root
     unsquashfs -f base/filesystem.squashfs
     rm squashfs-root
+
+    (
+      cd "chroot"
+      rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged 2> /dev/null
+    )
 }
 
 function mount-virtual-fs {
@@ -359,7 +365,7 @@ function chroot-phase-10 {
     [ -f "chroot/etc/TIGER_BUILD" ] && { return ; } || { echo ; }
 
     local in_use=$(basename $(chroot "chroot" readlink -f /boot/vmlinuz) | cut -c 9-)
-    old_kernels=$(
+    local old_kernels=$(
       chroot "chroot" dpkg --list |
         grep -v "${in_use}" |
         grep -Ei 'linux-image|linux-headers|linux-modules' |
@@ -370,13 +376,7 @@ function chroot-phase-10 {
         yes | chroot "chroot" apt-get -qq purge "${package}"
     done
 
-    yes | chroot "chroot" apt-get -qq autoremove "${package}"
-
-    (
-      cd "chroot"
-      rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged 2> /dev/null
-    )
-
+    chroot "chroot" ls /lib/modules/ | grep -v ${in_use} | sed 's|^|chroot "chroot" rm -rf /lib/modules/|g' | sh
 }
 
 function chroot-phase-11 {
@@ -449,9 +449,6 @@ function build-grub {
     echo "---------------------------------------------------------"
 
     [ -f "image/isolinux/grub.cfg" ] && { return ; } || { echo ; }
-
-    mkdir -pv image/{boot/grub,casper,isolinux,preseed}
-
 
     cp --dereference chroot/boot/vmlinuz    image/casper/vmlinuz
     cp --dereference chroot/boot/initrd.img image/casper/initrd
