@@ -73,7 +73,15 @@ calamares-settings-kubuntu
 calamares-settings-ubuntu-common
 ################################################
 #
-#     Recursos de serviço da Canonical
+#     Ícones
+#
+################################################
+ubuntu-mono
+humanity-icon-theme
+adwaita-icon-theme
+################################################
+#
+#     Recursos e serviços da Canonical
 #
 ################################################
 unattended-upgrades
