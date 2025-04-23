@@ -144,6 +144,8 @@ function chroot-phase-1 {
 
     local kernel=$(chroot chroot/ dpkg -l | grep linux-image-.*-generic | cut -d' ' -f 3)
     chroot "chroot" apt install casper ${kernel} --reinstall --allow-downgrades -y
+
+    
 }
 
 # Remove snaps and enable Flatpaks
@@ -151,16 +153,102 @@ function chroot-phase-2 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Removing snaps" 
+    echo "  Step ${current_step}/${step_count} - Organize o sistema de arquivos" 
     echo "---------------------------------------------------------"
     
     [ -f "chroot/etc/TIGER_BUILD" ] && { return ; } || { echo ; }
 
-    rm -rf "chroot/var/lib/snapd"
-    rm -rf "chroot/etc/systemd/system"/snap*
-    rm -rf "chroot/snap"
+    (
+      system_dir="mita-i"
+      system_version="2025"
+      cd "chroot"
+      mkdir -p "${system_dir}/system/"
+      mkdir -p "${system_dir}/linux/"
+      # Move /var to /usr
+      mv var usr/state
+      ln -s usr/state var
+      # Move /root to /home
+      mv root home
+      ln -s home/root/ root
 
-    chroot "chroot" apt autoremove snapd -y
+      # Rename /home as /users
+      mv home/ users
+      ln -s users home
+
+      # Rename /tmp as /temp
+      mv tmp temp
+      ln -s temp tmp
+
+      # Extract users data to outside of /etc
+      mkdir .accounts
+      mv etc/passwd .accounts
+      mv etc/shadow .accounts
+      mv etc/group .accounts
+      mv etc/gshadow .accounts
+      mv etc/login.defs .accounts
+      ln -fs ../.accounts/passwd etc
+      ln -fs ../.accounts/shadow etc
+      ln -fs ../.accounts/group etc
+      ln -fs ../.accounts/gshadow etc
+      ln -fs ../.accounts/login.defs etc
+      ln -fs "../../.accounts" "${system_dir}/system/"
+
+      # Move /etc and /users-data to /usr
+      mv etc usr/config
+      ln -s usr/config etc
+      ln -fs "../.accounts" "usr"
+      ln -fs "../proc" "usr"
+      ln -fs "../run" "usr"
+      ln -fs "../lib/os-release" "etc"
+
+      # Move /mnt to /media/0devices
+      mv mnt media/0-devices
+      ln -s media/0-devices mnt
+
+      # Move usr to mita-i
+      mkdir -p "${system_dir}/system"
+      mv usr "${system_dir}/system/${system_version}"
+      ln -s "${system_dir}/system/${system_version}" usr
+      ls -s "../../proc" "${system_dir}/system/"
+      ln -fs "../../run" "${system_dir}/system/"
+
+      # Link linux kernel directories
+      ln -fs /dev "${system_dir}/linux/devices"
+      ln -fs /sys "${system_dir}/linux/kernel"
+      ln -fs /run "${system_dir}/linux/runtime"
+      ln -fs /proc "${system_dir}/linux/processes"
+
+      mkdir -p applications
+      mkdir -p containers
+
+      mv opt applications/thirdparty
+      ln -s applications/thirdparty opt
+
+      # Link global flatpaks to /applications
+      mkdir -p var/lib/flatpak/
+      ln -s /applications var/lib/flatpak/app
+      ln -s /containers var/lib/flatpak/runtime
+
+      # Generate the .hidden file
+      (
+        echo "dev"
+        echo "sys"
+        echo "run"
+        echo "proc"
+        echo "etc"
+        echo "home"
+        echo "bin"
+        echo "sbin"
+        echo "lib"
+        echo "lib64"
+        echo "root"
+        echo "tmp"
+        echo "var"
+        echo "mnt"
+        echo "srv"
+        echo "opt"
+      ) > .hidden
+    )
 }
 
 function chroot-phase-3 {
