@@ -35,8 +35,8 @@ function download-image {
     mkdir -p base
     cd base
 
-    wget -c "${url}" -O "kubuntu.iso"
-    osirrox -indev "kbuntu.iso" -extract /casper .
+    #wget -c "${url}" -O "kubuntu.iso"
+    osirrox -indev "kubuntu.iso" -extract /casper .
     rm -f filesystem.manifest filesystem.size filesystem.manifest-minimal-remove filesystem.manifest-remove filesystem.squashfs.gpg
     
     cd ..
@@ -116,7 +116,6 @@ function chroot-phase-2 {
     echo "  Step ${current_step}/${step_count} - Organize o sistema de arquivos" 
     echo "---------------------------------------------------------"
     
-    [ -f "chroot/etc/TIGER_BUILD" ] && { return ; } || { echo ; }
 
     (
       system_dir="mita-i"
@@ -139,27 +138,9 @@ function chroot-phase-2 {
       mv tmp temp
       ln -s temp tmp
 
-      # Extract users data to outside of /etc
-      mkdir .accounts
-      mv etc/passwd .accounts
-      mv etc/shadow .accounts
-      mv etc/group .accounts
-      mv etc/gshadow .accounts
-      mv etc/login.defs .accounts
-      ln -fs ../.accounts/passwd etc
-      ln -fs ../.accounts/shadow etc
-      ln -fs ../.accounts/group etc
-      ln -fs ../.accounts/gshadow etc
-      ln -fs ../.accounts/login.defs etc
-      ln -fs "../../.accounts" "${system_dir}/system/"
-
       # Move /etc and /users-data to /usr
-      mv etc usr/config
-      ln -s usr/config etc
-      ln -fs "../.accounts" "usr"
-      ln -fs "../proc" "usr"
-      ln -fs "../run" "usr"
-      ln -fs "../lib/os-release" "etc"
+      #mv etc usr/config
+      ln -s /etc usr/config
 
       # Move /mnt to /media/0devices
       mv mnt media/0-devices
@@ -169,8 +150,6 @@ function chroot-phase-2 {
       mkdir -p "${system_dir}/system"
       mv usr "${system_dir}/system/${system_version}"
       ln -s "${system_dir}/system/${system_version}" usr
-      ls -s "../../proc" "${system_dir}/system/"
-      ln -fs "../../run" "${system_dir}/system/"
 
       # Link linux kernel directories
       ln -fs /dev "${system_dir}/linux/devices"
@@ -258,8 +237,6 @@ function build-grub {
     echo "---------------------------------------------------------"
     echo "  Step ${current_step}/${step_count} - Build GRUB image" 
     echo "---------------------------------------------------------"
-
-    [ -f "image/isolinux/grub.cfg" ] && { return ; } || { echo ; }
 
     cp --dereference chroot/boot/vmlinuz    image/casper/vmlinuz
     cp --dereference chroot/boot/initrd.img image/casper/initrd
@@ -443,10 +420,11 @@ done
 
 mkdir -p debian-packages rootfs image/{boot/grub,casper,isolinux,preseed} ;
 
-download-image
-extract-image
+#download-image
+#extract-image
 mount-virtual-fs
 chroot-phase-1
+chroot-phase-2
 umount-virtual-fs
 build-squashfs
 build-grub
