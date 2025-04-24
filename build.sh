@@ -35,7 +35,7 @@ function download-image {
     mkdir -p base
     cd base
 
-    #wget -c "${url}" -O "kubuntu.iso"
+    wget -c "${url}" -O "kubuntu.iso"
     osirrox -indev "kubuntu.iso" -extract /casper .
     rm -f filesystem.manifest filesystem.size filesystem.manifest-minimal-remove filesystem.manifest-remove filesystem.squashfs.gpg
     
@@ -48,6 +48,7 @@ function extract-image {
     echo "---------------------------------------------------------"
     echo "  Step ${current_step}/${step_count} - Extracting image" 
     echo "---------------------------------------------------------"
+    echo
 
     mkdir -p chroot
     ln -s chroot/ squashfs-root
@@ -56,7 +57,7 @@ function extract-image {
 
     (
       cd "chroot"
-      rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged 2> /dev/null
+      rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged
     )
 }
 
@@ -67,9 +68,18 @@ function mount-virtual-fs {
     echo "  Step ${current_step}/${step_count} - Initialize virtual FS" 
     echo "---------------------------------------------------------"
 
+    mkdir -p chroot/{dev/pts,run,proc,sys}
+
+    echo "  - Mounting /dev"
     mount --bind /dev "chroot/dev"
+
+    echo "  - Mounting /run"
     mount --bind /run "chroot/run"
+
+    echo "  - Mounting /proc"
     chroot "chroot" mount none -t proc /proc
+
+    echo "  - Mounting /dev/pts"
     chroot "chroot" mount none -t devpts /dev/pts
 }
 
@@ -80,20 +90,9 @@ function chroot-phase-1 {
     echo "  Step ${current_step}/${step_count} - Preparing base image" 
     echo "---------------------------------------------------------"
 
-    [ -d "rootfs/usr/share/plymouth/themes/kubuntu-logo" ] && {
-        rm -rf "chroot/usr/share/plymouth/themes/kubuntu-logo"
-        cp -rf "rootfs/usr/share/plymouth/themes/kubuntu-logo" "chroot/usr/share/plymouth/themes/"
-    }
-
     # Fix permissions to /var/lib/apt/lists
     chroot "chroot" mkdir -p /var/lib/apt/lists
     chroot "chroot" sudo chown -R _apt:root /var/lib/apt/lists
-    # Update casper and mark as manually installed if needed
-    chroot "chroot" apt install casper  -y
-
-    # Upgrade the system
-    chroot "chroot" apt update
-    chroot "chroot" apt upgrade --allow-downgrades -y 
 
     # Keyboard layout
     sed -i "s/us/${keyboard}/g" "chroot/etc/default/keyboard"
@@ -104,88 +103,137 @@ function chroot-phase-1 {
     chroot "chroot" sh -c "echo 'locales locales/default_environment_locale select pt_BR.UTF-8'         | debconf-set-selections"
     chroot "chroot" sh -c "echo 'debconf debconf/frontend select Noninteractive'                        | debconf-set-selections"
 
+    echo '#!/bin/bash
+if [ ! -L /etc ]; then
+  mv /etc /usr/config
+  ln -s /usr/config /etc
+
+  mkdir -p "/'${system_dir}'/shared/accounts/"
+
+  for file in passwd shadow group gshadow login.defs sudoers sudoers.d; do
+    if [ ! -L "/etc/${file}" ]; then
+      mv "/etc/${file}" "/mita-i/shared/accounts"
+    fi
+    ln -fs "/'${system_dir}'/shared/accounts/${file}" "/etc/${file}"
+  done
+fi
+' > "chroot/usr/sbin/mita-i-etc-merge"
+    chmod +x "chroot/usr/sbin/mita-i-etc-merge"
+
+    echo '[Unit]
+Description=Merge /etc with /usr
+DefaultDependencies=no
+Before=sysinit.target
+ConditionPathIsSymbolicLink=!/etc
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/mita-i-etc-merge
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
+' > "chroot/etc/systemd/system/mita-i-etc-merge.service"
+    mkdir -p /etc/systemd/system/sysinit.target.wants
+    chroot "chroot" ln -s /etc/systemd/system/mita-i-etc-merge.service /etc/systemd/system/sysinit.target.wants/mita-i-etc-merge.service
+
+    # Regenerate vmlinuz
     local kernel=$(chroot chroot/ dpkg -l | grep linux-image-.*-generic | cut -d' ' -f 3)
+    chroot "chroot" apt update
     chroot "chroot" apt install casper ${kernel} --reinstall --allow-downgrades -y
 }
 
-# Remove snaps and enable Flatpaks
+
 function chroot-phase-2 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Organize o sistema de arquivos" 
+    echo "  Step ${current_step}/${step_count} - Aplica a estrutura do Mita'i OS" 
     echo "---------------------------------------------------------"
     
 
     (
-      system_dir="mita-i"
-      system_version="2025"
       cd "chroot"
+
+      echo "  - Create Mita'i base directory"
       mkdir -p "${system_dir}/system/"
       mkdir -p "${system_dir}/linux/"
-      # Move /var to /usr
+      mkdir -p "${system_dir}/shared/accounts"
+      mkdir -p applications
+      mkdir -p containers
+
+      for file in passwd shadow group gshadow login.defs; do
+        cp "etc/${file}" "${system_dir}/shared/accounts"
+      done
+      
+      echo "  - Merge /boot with /usr"
+      mv boot usr/grub
+      ln -s usr/grub boot
+
+      echo "  - Merge /var with /usr"
       mv var usr/state
       ln -s usr/state var
-      # Move /root to /home
+
+      echo "  - Merge /root with /home"
       mv root home
       ln -s home/root/ root
 
-      # Rename /home as /users
-      mv home/ users
-      ln -s users home
-
-      # Rename /tmp as /temp
-      mv tmp temp
-      ln -s temp tmp
-
-      # Move /etc and /users-data to /usr
-      #mv etc usr/config
-      ln -s /etc usr/config
-
-      # Move /mnt to /media/0devices
+      echo "  - Merge /mnt with /media"
       mv mnt media/0-devices
       ln -s media/0-devices mnt
 
-      # Move usr to mita-i
-      mkdir -p "${system_dir}/system"
+      echo "  - Merge /opt with applications/thirdparty"
+      mv opt applications/thirdparty
+      ln -s applications/thirdparty opt
+
+      echo "  - Merge Flatpak with /applications"
+      mkdir -p var/lib/flatpak/
+      ln -s /applications var/lib/flatpak/app
+      ln -s /containers var/lib/flatpak/runtime
+
+      echo "  - Move /usr to Mita'i OS directory"
       mv usr "${system_dir}/system/${system_version}"
       ln -s "${system_dir}/system/${system_version}" usr
+      # /etc/resolv.conf é um link relativo
+      ln -fs /run "${system_dir}/system/${system_version}/run"
 
-      # Link linux kernel directories
+      echo "  - Rename /home as /users"
+      mv home/ users
+      ln -s users home
+
+      echo "  - Rename /tmp as /temp"
+      mv tmp temp
+      ln -s temp tmp
+
+
+      echo "  - Populate Mita'i OS linux directory"
       ln -fs /dev "${system_dir}/linux/devices"
       ln -fs /sys "${system_dir}/linux/kernel"
       ln -fs /run "${system_dir}/linux/runtime"
       ln -fs /proc "${system_dir}/linux/processes"
 
-      mkdir -p applications
-      mkdir -p containers
-
-      mv opt applications/thirdparty
-      ln -s applications/thirdparty opt
-
-      # Link global flatpaks to /applications
-      mkdir -p var/lib/flatpak/
-      ln -s /applications var/lib/flatpak/app
-      ln -s /containers var/lib/flatpak/runtime
 
       # Generate the .hidden file
       (
+        echo "bin"
+        echo "boot"
         echo "dev"
-        echo "sys"
-        echo "run"
-        echo "proc"
         echo "etc"
         echo "home"
-        echo "bin"
-        echo "sbin"
         echo "lib"
         echo "lib64"
-        echo "root"
-        echo "tmp"
-        echo "var"
         echo "mnt"
-        echo "srv"
         echo "opt"
+        echo "proc"
+        echo "root"
+        echo "run"
+        echo "sbin"
+        echo "srv"
+        echo "swapfile"
+        echo "sys"
+        echo "tmp"
+        echo "usr"
+        echo "var"
       ) > .hidden
     )
 }
@@ -200,23 +248,28 @@ function umount-virtual-fs {
     echo "RESUME=none"   > "chroot/etc/initramfs-tools/conf.d/resume"
     echo "FRAMEBUFFER=y" > "chroot/etc/initramfs-tools/conf.d/splash"
 
-    umount -l "chroot/dev/pts"
-    umount -l "chroot/dev"
-    umount -l "chroot/proc"
-    umount -l "chroot/run"
-    umount -l "chroot/debian-packages"
+    mounts=(
+        "chroot/dev/pts"
+        "chroot/dev"
+        "chroot/proc"
+        "chroot/run"
+        "chroot/debian-packages"
+    )
 
-    # We need to ensure that is unmounted
-    umount -l "chroot/dev/pts"
-    umount -l "chroot/dev"
-    umount -l "chroot/proc"
-    umount -l "chroot/run"
-    umount -l "chroot/debian-packages"
+    for mount_point in "${mounts[@]}"; do
+        while mountpoint -q "${mount_point}"; do
+            echo "  - Unmounting ${mount_point}"
+            umount -l "${mount_point}" 2>/dev/null
+            sleep 0.5
+        done
+    done
 
     # Cleanup history and cache
     rm -rf chroot/home/*
     rm -rf chroot/tmp/*
-    rm -rf chroot/debian-packages
+    rm -rf chroot/debian-packages    || true 2>&1 > /dev/null
+    rm -rf chroot/lib.usr-is-merged  || true 2>&1 > /dev/null
+    rm -rf chroot/sbin.usr-is-merged || true 2>&1 > /dev/null
 }
 
 function build-squashfs {
@@ -397,12 +450,6 @@ function EXIT {
     # system on a consistent state
     {
         umount-virtual-fs
-        umount-virtual-fs
-        umount-virtual-fs
-        umount-virtual-fs
-        umount-virtual-fs
-        umount-virtual-fs
-        umount-virtual-fs
     } &> /dev/null
      2>&1 > /dev/null
 }
@@ -420,8 +467,8 @@ done
 
 mkdir -p debian-packages rootfs image/{boot/grub,casper,isolinux,preseed} ;
 
-#download-image
-#extract-image
+download-image
+extract-image
 mount-virtual-fs
 chroot-phase-1
 chroot-phase-2
