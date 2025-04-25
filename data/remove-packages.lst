@@ -19,45 +19,48 @@ firefox
 apport
 ################################################
 #
+#     Thunderbird
+#
+################################################
+thunderbird
+################################################
+#
 #     Miscelânea de apps KDE
 #
 ################################################
+ark
+dolphin
 elisa
-thunderbird
-konversation
-kmines
-kpat
-ksudoku
-kmahjongg
+gwenview
+haruna
 info
+kate
+kcalc
+kcharselect
+kde-config-tablet
+kde-spectacle
+kdeconnect
+khelpcenter
+kinfocenter
+kmahjongg
+kmenuedit
+kmines
+konversation
+kpat
+krdc
+ksudoku
 ksystemlog
 kwalletmanager
-khelpcenter
-im-config
-partitionmanager
-kde-config-tablet
-usb-creator-kde
-plasma-welcome
 neochat
-kinfocenter
-kmenuedit
-kcharselect
-plasma-discover
-ark
-kcalc
-kate
-haruna
 okular
-kde-spectacle
+partitionmanager
+plasma-discover
 plasma-systemmonitor
-gwenview
-krdc
+plasma-welcome
 skanlite
 skanpage
-dolphin
-kdeconnect
 systemsettings
-konsole
+usb-creator-kde
 ################################################
 #
 #     Fcitx 5
@@ -69,6 +72,7 @@ fcitx5-frontend-all
 libfcitx5core7
 fcitx5-chinese-addons-data
 fcitx5-material-color
+im-config
 ################################################
 #
 #     Instalador calamares
@@ -80,17 +84,12 @@ calamares
 #     Recursos e serviços da Canonical
 #
 ################################################
-unattended-upgrades
+snapd
 ubuntu-advantage-tools
 ubuntu-drivers-common
 ubuntu-kernel-accessories
-# ubuntu-keyring
-ubuntu-minimal
-# ubuntu-mono
 ubuntu-pro-client
-ubuntu-pro-client-l10n
 ubuntu-release-upgrader-core
-ubuntu-release-upgrader-qt
-ubuntu-standard
-snapd
+unattended-upgrades
+
 
