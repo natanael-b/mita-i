@@ -40,11 +40,5 @@ kwrite
 #
 ################################################
 # TODO: ver qual puxa o systemsettings
-kde-config-ssdm
-kde-config-plymouth
-kde-config-screenlocker
-kde-config-updates
-plasma-firewall
-system-config-printer-udev
-system-config-printer-common
+system-config-printer
 cups-pk-helper
