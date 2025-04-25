@@ -233,9 +233,14 @@ function chroot-phase-5 {
       ln -s users home
 
       echo "  - Merge /root with /users"
-      mv root users
-      ln -fs users/root root
-
+      sudo mkdir -p home/root
+      sudo rm root
+      sudo chown root:root home/root
+      sudo chmod 700 home/root
+      sudo ln -s home/root root
+      sudo chown root:root root
+      sudo chmod 700 root
+    
       echo "  - Rename /tmp as /temp"
       mv tmp temp
       ln -s temp tmp
@@ -260,6 +265,7 @@ function chroot-phase-5 {
         echo "mnt"
         echo "opt"
         echo "proc"
+        echo "root"
         echo "root"
         echo "run"
         echo "sbin"
