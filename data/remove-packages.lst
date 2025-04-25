@@ -75,6 +75,14 @@ fcitx5-material-color
 im-config
 ################################################
 #
+#     Recursos do Kubuntu
+#
+################################################
+kubuntu-settings-desktop
+kubuntu-wallpapers
+kubuntu-web-shortcuts
+################################################
+#
 #     Instalador calamares
 #
 ################################################
