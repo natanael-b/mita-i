@@ -170,7 +170,7 @@ function chroot-phase-3 {
     chroot "chroot" apt install $(sed "s|#.*||g" data/install-packages.lst | xargs) -y
 }
 
-function build-squashfs {
+function chroot-phase-4  {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
@@ -194,13 +194,14 @@ function chroot-phase-5 {
       mkdir -p "${system_dir}/system/"
       mkdir -p "${system_dir}/linux/"
       mkdir -p "${system_dir}/shared/accounts"
+      mkdir -p "${system_dir}/shared/flatpaks"
       mkdir -p applications
       mkdir -p containers
 
       for file in passwd shadow group gshadow login.defs; do
         cp "etc/${file}" "${system_dir}/shared/accounts"
       done
-      
+
       echo "  - Merge /boot with /usr"
       mv boot usr/grub
       ln -s usr/grub boot
@@ -218,9 +219,10 @@ function chroot-phase-5 {
       ln -s applications/thirdparty opt
 
       echo "  - Merge Flatpak with /applications"
-      mkdir -p var/lib/flatpak/
-      ln -s /applications var/lib/flatpak/app
-      ln -s /containers var/lib/flatpak/runtime
+      mkdir -p "/${system_dir}/shared/flatpaks"
+      ln -s "/${system_dir}/shared/flatpaks"  var/lib/flatpak
+      ln -s /applications "${system_dir}/shared/flatpaks/app"
+      ln -s /containers "${system_dir}/shared/flatpaks/runtime"
 
       echo "  - Move /usr to Mita'i OS directory"
       mv usr "${system_dir}/system/${system_version}"
@@ -233,13 +235,13 @@ function chroot-phase-5 {
       ln -s users home
 
       echo "  - Merge /root with /users"
-      sudo mkdir -p home/root
-      sudo rm root
-      sudo chown root:root home/root
-      sudo chmod 700 home/root
-      sudo ln -s home/root root
-      sudo chown root:root root
-      sudo chmod 700 root
+      mkdir -p home/root
+      rm -rf root
+      chown root:root home/root
+      chmod 700 home/root
+      ln -s home/root root
+      chown root:root root
+      chmod 700 root
     
       echo "  - Rename /tmp as /temp"
       mv tmp temp
@@ -266,7 +268,7 @@ function chroot-phase-5 {
         echo "opt"
         echo "proc"
         echo "root"
-        echo "root"
+        echo "rofs"
         echo "run"
         echo "sbin"
         echo "srv"
@@ -332,7 +334,6 @@ function umount-virtual-fs {
     done
 
     # Cleanup history and cache
-    rm -rf chroot/home/*
     rm -rf chroot/tmp/*
     rm -rf chroot/debian-packages    || true 2>&1 > /dev/null
     rm -rf chroot/lib.usr-is-merged  || true 2>&1 > /dev/null
