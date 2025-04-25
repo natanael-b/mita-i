@@ -89,10 +89,10 @@ function chroot-phase-1 {
     echo "---------------------------------------------------------"
     echo "  Step ${current_step}/${step_count} - Preparing base image" 
     echo "---------------------------------------------------------"
-
+    echo
     # Fix permissions to /var/lib/apt/lists
     chroot "chroot" mkdir -p /var/lib/apt/lists
-    chroot "chroot" sudo chown -R _apt:root /var/lib/apt/lists
+    chroot "chroot" chown -R _apt:root /var/lib/apt/lists
 
     # Keyboard layout
     sed -i "s/us/${keyboard}/g" "chroot/etc/default/keyboard"
@@ -143,14 +143,49 @@ WantedBy=sysinit.target
     chroot "chroot" apt install casper ${kernel} --reinstall --allow-downgrades -y
 }
 
-
 function chroot-phase-2 {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Remove pacotes indesejados" 
+    echo "---------------------------------------------------------"
+    echo
+
+    chroot "chroot" apt autoremove $(sed "s|#.*||g" data/remove-packages.lst | xargs) -y
+
+    # Remove snaps only to reduce ISO size, snaps are freinds :)
+    rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
+    find chroot/etc/systemd -name "*snap*" -delete
+    find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +    
+}
+
+function chroot-phase-3 {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Instala pacotes extras" 
+    echo "---------------------------------------------------------"
+    echo
+
+    chroot "chroot" apt install $(sed "s|#.*||g" data/install-packages.lst | xargs) -y
+}
+
+function build-squashfs {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Baixar pacotes Debian" 
+    echo "---------------------------------------------------------"
+    echo
+}
+
+function chroot-phase-5 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
     echo "  Step ${current_step}/${step_count} - Aplica a estrutura do Mita'i OS" 
     echo "---------------------------------------------------------"
-    
+    echo
 
     (
       cd "chroot"
@@ -174,10 +209,6 @@ function chroot-phase-2 {
       mv var usr/state
       ln -s usr/state var
 
-      echo "  - Merge /root with /home"
-      mv root home
-      ln -s home/root/ root
-
       echo "  - Merge /mnt with /media"
       mv mnt media/0-devices
       ln -s media/0-devices mnt
@@ -200,6 +231,10 @@ function chroot-phase-2 {
       echo "  - Rename /home as /users"
       mv home/ users
       ln -s users home
+
+      echo "  - Merge /root with /users"
+      mv root users
+      ln -fs users/root root
 
       echo "  - Rename /tmp as /temp"
       mv tmp temp
@@ -237,6 +272,32 @@ function chroot-phase-2 {
       ) > .hidden
     )
 }
+
+function cleanup {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Limpeza final do Mita'i OS" 
+    echo "---------------------------------------------------------"
+    echo
+
+    echo "  - Hide useless itens from menu"
+    mkdir -p chroot/usr/local/share/applications
+    for file in $(sed "s|#.*||g" data/hide-from-menu.lst | xargs); do
+      if [ -f "chroot/usr/local/share/applications/${file}" ]; then
+        rm "chroot/usr/local/share/applications/${file}"
+      fi
+      cp "chroot/usr/share/applications/${file}" "chroot/usr/local/share/applications"
+      sed -i 's|\[Desktop Entry]|[Desktop Entry]\nNoDisplay=true|g' "chroot/usr/local/share/applications/${file}"
+    done
+    
+    echo "  - Cleaning up APT"
+    chroot "chroot" apt clean
+
+    echo "  - Cleaning up logs"
+    chroot "chroot" find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;
+}
+
 function umount-virtual-fs {
     current_step=$((current_step+1))
     echo
@@ -467,11 +528,15 @@ done
 
 mkdir -p debian-packages rootfs image/{boot/grub,casper,isolinux,preseed} ;
 
-download-image
+#download-image
 extract-image
 mount-virtual-fs
 chroot-phase-1
 chroot-phase-2
+chroot-phase-3
+chroot-phase-4
+chroot-phase-5
+cleanup
 umount-virtual-fs
 build-squashfs
 build-grub
