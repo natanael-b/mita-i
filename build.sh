@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 function download-image {
     current_step=$((current_step+1))
     echo
@@ -504,7 +503,16 @@ function EXIT {
 trap EXIT EXIT
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
+variant=$(basename "${1}")
+if [ "${variant}" = "" ]; then
+  echo "Warning: Variant not specified fallbacking to 'minimal'"
+  variant="minimal"
+fi
 
+if [ -f "${variant}/distro.ini" = "" ]; then
+  echo "Fatal: Missing distro descriptor in variant '${variant}'"
+  variant="minimal"
+fi
 #-----------------------------------------------------------------------------------------------------------------------------------------
 iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
 iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
