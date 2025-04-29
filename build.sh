@@ -259,6 +259,52 @@ function chroot-phase-5 {
     )
 }
 
+function chroot-phase-6 {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Remove falsamente pacotes" 
+    echo "---------------------------------------------------------"
+    echo
+
+    mkdir -p chroot/etc/apt/preferences.d/
+
+    for package in $(sed "s|#.*||g" data/remove-packages-content.lst | xargs); do
+      echo "Removing '${package}' content"
+      for file in $(cat "chroot/var/lib/dpkg/info/${package}.list"); do
+        if [ -f "chroot/${file}" ]; then
+          rm "chroot/${file}"
+        fi
+      done
+
+      echo "  - Regenerate list file"
+      (
+        echo "/."
+        echo "/etc"
+        echo "/etc/apt"
+        echo "/etc/apt/preferences.d"
+        echo "/etc/apt/preferences.d/${package}"
+      ) > chroot/var/lib/dpkg/info/${package}.list
+      echo "  - Pinning release"
+      (
+        echo "Package: ${package}"
+        echo "Pin: release *"
+        echo "Pin-Priority: -1"
+      ) > chroot/etc/apt/preferences.d/${package}
+      echo "  - Generating md5sum of '/etc/apt/preferences.d/${package}'"
+      chroot chroot/ md5sum "etc/apt/preferences.d/${package}" > chroot/var/lib/dpkg/info/${package}.md5sums
+
+      echo "  - Removing triggers"
+      for trigger in conffiles postrm prerm postinst preinst shlibs triggers do
+        if [ -f "chroot/var/lib/dpkg/info/${package}.${trigger}" ]; then
+          rm "chroot/var/lib/dpkg/info/${package}.${trigger}"
+        fi
+      done
+    done 
+    chroot chroot/ dpkg --clear-avail
+    chroot chroot/ apt-get update
+}
+
 function cleanup {
     current_step=$((current_step+1))
     echo
@@ -541,6 +587,7 @@ chroot-phase-2
 chroot-phase-3
 chroot-phase-4
 chroot-phase-5
+chroot-phase-6
 cleanup
 umount-virtual-fs
 build-squashfs
