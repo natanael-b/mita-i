@@ -151,7 +151,7 @@ function chroot-phase-2 {
     echo "---------------------------------------------------------"
     echo
 
-    chroot "chroot" apt autoremove $(sed "s|#.*||g" data/remove-packages.lst | xargs) -y
+    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" data/remove-packages.lst | xargs) -y
 
     # Remove snaps only to reduce ISO size, snaps are freinds :)
     rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
@@ -191,7 +191,7 @@ function chroot-phase-5 {
       cd "chroot"
 
       echo "  - Create Mita'i base directory"
-      mkdir -p "${system_dir}/system/"
+      mkdir -p "${system_dir}/versions/"
       mkdir -p "${system_dir}/linux/"
       mkdir -p "${system_dir}/shared/accounts"
       mkdir -p "${system_dir}/shared/flatpaks"
@@ -225,10 +225,11 @@ function chroot-phase-5 {
       ln -s /containers "${system_dir}/shared/flatpaks/runtime"
 
       echo "  - Move /usr to Mita'i OS directory"
-      mv usr "${system_dir}/system/${system_version}"
-      ln -s "${system_dir}/system/${system_version}" usr
+      mv usr "${system_dir}/versions/${system_version}"
+      ln -s "${system_dir}/versions/${system_version}" usr
+      ln -s /usr "${system_dir}/system"
       # /etc/resolv.conf é um link relativo
-      ln -fs /run "${system_dir}/system/${system_version}/run"
+      ln -fs /run "${system_dir}/versions/${system_version}/run"
 
       echo "  - Rename /home as /users"
       mv home/ users
