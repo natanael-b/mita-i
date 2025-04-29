@@ -1,27 +1,5 @@
 #!/usr/bin/env bash
 
-name="Mita-i_OS"
-user="kurumin"
-host="oka"
-grub_name="Mita'i OS - Build $(date +%y.0.%-m-%-d)"
-splash="quiet"
-keyboard="br"
-base="24.04"
-system_dir="mita-i"
-system_version="2025"
-
-#-----------------------------------------------------------------------------------------------------------------------------------------
-iso_repository="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/"
-iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
-url="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/${iso_file}"
-#-----------------------------------------------------------------------------------------------------------------------------------------
-
-script=$(readlink -f "${0}")
-step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template" | wc -l)
-current_step=0
-
-#-----------------------------------------------------------------------------------------------------------------------------------------
-
 
 function download-image {
     current_step=$((current_step+1))
@@ -525,18 +503,29 @@ function EXIT {
 
 trap EXIT EXIT
 
-dependencies=(debootstrap mtools squashfs-tools xorriso casper lib32gcc-s1 grub-common grub-pc-bin grub-efi)
+#-----------------------------------------------------------------------------------------------------------------------------------------
 
+#-----------------------------------------------------------------------------------------------------------------------------------------
+iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
+iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
+url="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/${iso_file}"
+#-----------------------------------------------------------------------------------------------------------------------------------------
+script=$(readlink -f "${0}")
+step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template" | wc -l)
+current_step=0
+#-----------------------------------------------------------------------------------------------------------------------------------------
+dependencies=(debootstrap mtools squashfs-tools xorriso casper lib32gcc-s1 grub-common grub-pc-bin grub-efi)
 missing=""
 for dep in ${dependencies[@]}; do
   dpkg -s ${dep} 2>/dev/null >/dev/null || {
     missing=" ${missing} ${dep}"
   }
 done
+#-----------------------------------------------------------------------------------------------------------------------------------------
+mkdir -p debian-packages image/{boot/grub,casper,isolinux,preseed} ;
+#-----------------------------------------------------------------------------------------------------------------------------------------
 
-mkdir -p debian-packages rootfs image/{boot/grub,casper,isolinux,preseed} ;
-
-#download-image
+download-image
 extract-image
 mount-virtual-fs
 chroot-phase-1
@@ -549,3 +538,6 @@ umount-virtual-fs
 build-squashfs
 build-grub
 build-iso
+
+#-----------------------------------------------------------------------------------------------------------------------------------------
+
