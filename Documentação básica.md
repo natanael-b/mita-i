@@ -21,8 +21,6 @@ Todos são adicionado na raiz sem uma distinção do que são, por exemplo, cons
   org.gimp.GIMP
 ```
 
-A razão para isso é simples, é fácil gerir aplicativos com ferramentas unificadas, basta executar um `uninstall [nome]` para remover ou `install [nome]` para instalar, isso permite desenhar interfaces muito mais otimizadas e integradas ao sistema
-
 >[!IMPORTANT]
 >Esse diretório possui hooks:
 > - Ao remover uma pasta o aplicativo é desinstalado e removido do menu
