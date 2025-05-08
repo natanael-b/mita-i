@@ -128,13 +128,17 @@ function chroot-phase-2 {
     echo "---------------------------------------------------------"
     echo
 
-    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" data/remove-packages.lst | xargs) -y
-
     # Remove snaps only to reduce ISO size, snaps are freinds :)
     rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
     mkdir -p chroot/var/lib/snapd chroot/var/snap chroot/usr/lib/snapd
     find chroot/etc/systemd -name "*snap*" -delete
-    find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +    
+    find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
+
+    if [ "$(sed 's|#.*||g' data/remove-packages-content.lst | xargs)" = "" ]; then
+      echo "No packages to remove"
+      return
+    fi
+    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" data/remove-packages.lst | xargs) -y   
 }
 
 function chroot-phase-3 {
@@ -144,7 +148,10 @@ function chroot-phase-3 {
     echo "  Step ${current_step}/${step_count} - Instala pacotes extras" 
     echo "---------------------------------------------------------"
     echo
-
+    if [ "$(sed 's|#.*||g' data/install-packages.lst | xargs)" = "" ]; then
+      echo "No packages to install"
+      return
+    fi
     chroot "chroot" apt install $(sed "s|#.*||g" data/install-packages.lst | xargs) -y
 }
 
@@ -155,9 +162,108 @@ function chroot-phase-4  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Debian" 
     echo "---------------------------------------------------------"
     echo
+    if [ "$(sed 's|#.*||g' data/debian-packages-urls.lst | xargs)" = "" ]; then
+      echo "No packages to install"
+      return
+    fi
+    echo "  - Downloading packages"
+    echo
+    mkdir -p "chroot/mita-i.debian-packages"
+    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g" data/debian-packages-urls.lst | xargs)
+    echo
+
+    echo "  - Installing packages"
+    echo
+    chroot chroot /bin/bash -c "apt install -y /mita-i.debian-packages/*.deb"
+    echo
+
+    echo "  - Remove .deb files"
+    echo
+    rm -rf "chroot/mita-i.debian-packages"
+    echo
 }
 
-function chroot-phase-5 {
+function chroot-phase-5  {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Baixar pacotes Flatpak" 
+    echo "---------------------------------------------------------"
+    echo
+    if [ "$(sed 's|#.*||g' data/flatpaks.lst | xargs)" = "" ]; then
+      echo "No packages to install"
+      return
+    fi
+    echo "  - Checking for flatpak"
+    if [ ! -f "chroot/usr/bin/flatpak" ]; then
+        echo
+        echo "Flatpak, not found, skipping..."
+        echo
+        return
+    fi
+    echo "  - Setup Flathub"
+    echo
+    echo "Fixing TSL issues with Flathub SSL on chroot..."
+    chroot "chroot" apt install ca-certificates --reinstall --allow-downgrades -y
+    echo
+    chroot "chroot" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    echo
+    echo "  - Installing packages"
+    echo
+    chroot "chroot" flatpak install $(sed "s|#.*||g" data/flatpaks.lst | xargs) -y
+    echo
+}
+
+function chroot-phase-6  {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Baixar pacotes AppImage" 
+    echo "---------------------------------------------------------"
+    echo
+    if [ "$(sed 's|#.*||g' data/appimages-urls.lst | xargs)" = "" ]; then
+      echo "No packages to install"
+      return
+    fi
+    echo "  - Checking for Mita-i-appimage-installer"
+    if [ ! -f "chroot/usr/bin/mita-i-appimage-installer" ]; then
+        echo
+        echo "Mita-i-appimage-installer, not found skipping..."
+        echo
+        return
+    fi
+
+    echo "  - Installing packages"
+    echo
+    chroot "chroot" mita-i-appimage-installer fetch $(sed "s|#.*||g" data/appimages-urls.lst | xargs) -y
+    echo
+}
+
+function chroot-phase-7  {
+    current_step=$((current_step+1))
+    echo
+    echo "---------------------------------------------------------"
+    echo "  Step ${current_step}/${step_count} - Baixar pacotes Snaps" 
+    echo "---------------------------------------------------------"
+    echo
+    if [ "$(sed 's|#.*||g' data/snaps.lst | xargs)" = "" ]; then
+      echo "No packages to install"
+      return
+    fi
+    echo "  - Checking for snapd"
+    echo
+    if [ ! -f "chroot/usr/bin/snap" ]; then
+        echo
+        echo "Snap support, not found skipping..."
+        echo
+    fi
+    echo "  - Installing packages"
+    echo
+    chroot "chroot" snap install $(sed "s|#.*||g" data/snaps.lst | xargs) -y
+    echo
+}
+
+function chroot-phase-6 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
@@ -260,15 +366,19 @@ function chroot-phase-5 {
     )
 }
 
-function chroot-phase-6 {
+function chroot-phase-7 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
     echo "  Step ${current_step}/${step_count} - Remove falsamente pacotes" 
     echo "---------------------------------------------------------"
     echo
-
     mkdir -p chroot/etc/apt/preferences.d/
+
+    if [ "$(sed 's|#.*||g' data/remove-packages-content.lst | xargs)" = "" ]; then
+      echo "No packages to remove contents"
+      return
+    fi
 
     for package in $(sed "s|#.*||g" data/remove-packages-content.lst | xargs); do
       echo "Removing '${package}' content"
@@ -589,6 +699,9 @@ chroot-phase-3
 chroot-phase-4
 chroot-phase-5
 chroot-phase-6
+chroot-phase-7
+chroot-phase-8
+chroot-phase-9
 cleanup
 umount-virtual-fs
 build-squashfs
