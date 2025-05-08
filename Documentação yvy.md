@@ -1,6 +1,8 @@
+Ivy é um nome adequado?
+
 # Yvy
 
-**Yvy** permite que você agrupe e integre aplicativos em conjuntos personalizados — como suítes integradas de produtividade — usando apenas pastas. É uma maneira simples e poderosa de organizar seu ambiente de trabalho no KDE Plasma.
+**Yvy** (em _**guarani**_: terra, chão, base, fundamento) permite que você agrupe e integre aplicativos em conjuntos personalizados — como suítes integradas de produtividade — usando apenas pastas. É uma maneira simples e poderosa de organizar seu ambiente de trabalho no KDE Plasma.
 
 ---
 
