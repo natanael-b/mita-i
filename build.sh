@@ -12,8 +12,8 @@ function download-image {
     mkdir -p base
     cd base
 
-    wget -c "${url}" -O "kubuntu.iso"
-    osirrox -indev "kubuntu.iso" -extract /casper .
+    wget -c "${url}" -O "${flavour}.iso"
+    osirrox -indev "${flavour}.iso" -extract /casper .
     rm -f filesystem.manifest filesystem.size filesystem.manifest-minimal-remove filesystem.manifest-remove filesystem.squashfs.gpg
     
     cd ..
@@ -34,7 +34,9 @@ function extract-image {
 
     (
       cd "chroot"
-      rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged
+      if [ -d "bin.usr-is-merged" ]; then
+        rm -rf bin.usr-is-merged lib.usr-is-merged sbin.usr-is-merged
+      fi
     )
 }
 
@@ -134,7 +136,7 @@ function chroot-phase-2 {
     find chroot/etc/systemd -name "*snap*" -delete
     find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages-content.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to remove"
       return
     fi
@@ -287,57 +289,77 @@ function chroot-phase-8 {
       done
 
       echo "  - Merge /boot with /usr"
-      mv boot usr/grub
-      ln -s usr/grub boot
+      if [ ! -L "boot" ]; then
+        mv boot usr/grub
+        ln -s usr/grub boot
+      fi
 
       echo "  - Merge /var with /usr"
-      mv var usr/state
-      ln -s usr/state var
+      if [ ! -L "var" ]; then
+        mv var usr/state
+        ln -s usr/state var
+      fi
 
       echo "  - Merge /mnt with /media"
-      mv mnt media/0-devices
-      ln -s media/0-devices mnt
+      if [ ! -L "mnt" ]; then
+        mv mnt media/0-devices
+        ln -s media/0-devices mnt
+      fi
 
       echo "  - Merge /opt with applications/thirdparty"
-      mv opt applications/thirdparty
-      ln -s applications/thirdparty opt
+      if [ ! -L "opt" ]; then
+        mv opt applications/thirdparty
+        ln -s applications/thirdparty opt
+      fi
 
       echo "  - Merge Flatpak with /applications"
-      mkdir -p "/${system_dir}/shared/flatpaks"
-      ln -s "/${system_dir}/shared/flatpaks"  var/lib/flatpak
-      ln -s /applications "${system_dir}/shared/flatpaks/app"
-      ln -s /containers "${system_dir}/shared/flatpaks/runtime"
+      if [ ! -L "${system_dir}/shared/flatpaks/runtime" ]; then
+        mkdir -p "/${system_dir}/shared/flatpaks"
+        ln -s "/${system_dir}/shared/flatpaks"  var/lib/flatpak
+        ln -s /applications "${system_dir}/shared/flatpaks/app"
+        ln -s /containers "${system_dir}/shared/flatpaks/runtime"
+      fi
 
       echo "  - Move /usr to Mita'i OS directory"
-      mv usr "${system_dir}/versions/${system_version}"
-      ln -s "${system_dir}/versions/${system_version}" usr
-      ln -s /usr "${system_dir}/system"
-      # /etc/resolv.conf é um link relativo
-      ln -fs /run "${system_dir}/versions/${system_version}/run"
+      if [ ! -L "usr" ]; then
+        mv usr "${system_dir}/versions/${system_version}"
+        ln -s "${system_dir}/versions/${system_version}" usr
+        ln -s /usr "${system_dir}/system"
+        # /etc/resolv.conf é um link relativo
+        ln -fs /run "${system_dir}/versions/${system_version}/run"
+      fi
 
       echo "  - Rename /home as /users"
-      mv home/ users
-      ln -s users home
+      if [ ! -L "home" ]; then
+        mv home/ users
+        ln -s users home
+      fi
 
       echo "  - Merge /root with /users"
-      mkdir -p home/root
-      rm -rf root
-      chown root:root home/root
-      chmod 700 home/root
-      ln -s home/root root
-      chown root:root root
-      chmod 700 root
+      if [ ! -L "root" ]; then
+        mkdir -p home/root
+        rm -rf root
+        chown root:root home/root
+        chmod 700 home/root
+        ln -s home/root root
+        chown root:root root
+        chmod 700 root
+      fi
     
       echo "  - Rename /tmp as /temp"
-      mv tmp temp
-      ln -s temp tmp
+      if [ ! -L "tmp" ]; then
+        mv tmp temp
+        ln -s temp tmp
+      fi
 
 
       echo "  - Populate Mita'i OS linux directory"
-      ln -fs /dev "${system_dir}/linux/devices"
-      ln -fs /sys "${system_dir}/linux/kernel"
-      ln -fs /run "${system_dir}/linux/runtime"
-      ln -fs /proc "${system_dir}/linux/processes"
+      if [ ! -L "${system_dir}/linux/processes" ]; then
+        ln -fs /dev "${system_dir}/linux/devices"
+        ln -fs /sys "${system_dir}/linux/kernel"
+        ln -fs /run "${system_dir}/linux/runtime"
+        ln -fs /proc "${system_dir}/linux/processes"
+      fi
 
 
       # Generate the .hidden file
@@ -498,7 +520,7 @@ function build-grub {
     cp --dereference chroot/boot/initrd.img image/casper/initrd
 
     (
-        sed "s|#.*||g" ../data/${variant}/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry "|;s|$|\n  initrd /casper/initrd\n}\n|;s|:|" {\n  |'
+        sed "s|#.*||g" ../data/${variant}/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry |;s|$|\n  initrd /casper/initrd\n}\n|;s|:| {\n  |'
         
         echo "menuentry \"Reboot\" {reboot}"
         echo "menuentry \"Shutdown\" {halt}"
@@ -522,7 +544,7 @@ function build-grub {
       -e "s/\${user}/$escaped_user/g"                     \
       -e "s/\${host}/$escaped_host/g"                     \
       -e "s/\${name}/$escaped_name/g"                     \
-      -e "s/\${grub_name}/$escaped_grub_name/g"           \
+      -e "s/\${grub_name}/\"$escaped_grub_name\"/g"           \
       -e "s/\${splash}/$escaped_splash/g"                 \
       -e "s/\${keyboard}/$escaped_keyboard/g"             \
       -e "s/\${base}/$escaped_base/g"                     \
