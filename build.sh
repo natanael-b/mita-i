@@ -132,6 +132,7 @@ function chroot-phase-2 {
 
     # Remove snaps only to reduce ISO size, snaps are freinds :)
     rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
+    mkdir -p chroot/var/lib/snapd chroot/var/snap chroot/usr/lib/snapd
     find chroot/etc/systemd -name "*snap*" -delete
     find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +    
 }
