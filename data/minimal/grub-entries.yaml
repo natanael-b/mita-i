@@ -1,13 +1,18 @@
 # Entradas customizadas do GRUB
 # Variáveis:
 #
-#  ${grub_name} -> Nome de exibição do sistema no GRUB
-#  ${name}      -> Nome da distribuição
-#  ${name}      -> Nome da distribuição
-#  ${splash}    -> Flag de splash (usualmente, quiet splash)
-#  ${host}      -> Nome do host padrão
-#  ${user}      -> Nome do usuário no modo live
-#  ${locale}    -> Idioma do sistema
-
+#   ${user}           -> Nome do usuário no modo live
+#   ${host}           -> Nome da máquina (hostname) no modo live
+#   ${name}           -> Nome interno do sistema operacional
+#   ${grub_name}      -> Nome exibido no menu do GRUB durante o boot
+#   ${splash}         -> Parâmetro de inicialização que define o modo silencioso (sem mensagens)
+#   ${keyboard}       -> Layout de teclado utilizado no modo live
+#   ${base}           -> Versão base do Ubuntu usada
+#   ${system_dir}     -> Nome do diretório raiz do sistema no repositório ou estrutura de build
+#   ${system_version} -> Versão do sistema
+#   ${flavour}        -> Sabor (flavour) do Ubuntu utilizado como base
+#   ${locale}         -> Localização padrão e idioma do sistema
+#   ${timezone}       -> Fuso-horário padrão para caso Geo-Ip falhe
+#
 ${grub_name}: linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} ---"
 ${grub_name} (Modo Recovery): linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} recovery ---"
