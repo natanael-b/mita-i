@@ -29,6 +29,7 @@ function extract-image {
 
     mkdir -p chroot
     ln -s chroot/ squashfs-root
+    read
     unsquashfs -f base/filesystem.squashfs
     rm squashfs-root
 
@@ -134,11 +135,11 @@ function chroot-phase-2 {
     find chroot/etc/systemd -name "*snap*" -delete
     find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
 
-    if [ "$(sed 's|#.*||g' ../data/remove-packages-content.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages-content.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to remove"
       return
     fi
-    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" ../data/remove-packages.lst | xargs) -y   
+    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" ../data/${variant}/remove-packages.lst | xargs) -y   
 }
 
 function chroot-phase-3 {
@@ -148,11 +149,11 @@ function chroot-phase-3 {
     echo "  Step ${current_step}/${step_count} - Instala pacotes extras" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' ../data/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
-    chroot "chroot" apt install $(sed "s|#.*||g" ../data/install-packages.lst | xargs) -y
+    chroot "chroot" apt install $(sed "s|#.*||g" ../data/${variant}/install-packages.lst | xargs) -y
 }
 
 function chroot-phase-4  {
@@ -162,14 +163,14 @@ function chroot-phase-4  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Debian" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' ../data/debian-packages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/debian-packages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
     echo "  - Downloading packages"
     echo
     mkdir -p "chroot/mita-i.debian-packages"
-    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g"  ../data/debian-packages-urls.lst  | sed '/^$/d' | xargs)
+    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g"  ../data/${variant}/debian-packages-urls.lst  | sed '/^$/d' | xargs)
     echo
 
     echo "  - Installing packages"
@@ -190,7 +191,7 @@ function chroot-phase-5  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Flatpak" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' ../data/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -210,7 +211,7 @@ function chroot-phase-5  {
     echo
     echo "  - Installing packages"
     echo
-    chroot "chroot" flatpak install $(sed "s|#.*||g" ../data/flatpaks.lst | xargs) -y
+    chroot "chroot" flatpak install $(sed "s|#.*||g" ../data/${variant}/flatpaks.lst | xargs) -y
     echo
 }
 
@@ -221,7 +222,7 @@ function chroot-phase-6  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes AppImage" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' ../data/appimages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/appimages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -235,7 +236,7 @@ function chroot-phase-6  {
 
     echo "  - Installing packages"
     echo
-    chroot "chroot" mita-i-appimage-installer fetch $(sed "s|#.*||g" ../data/appimages-urls.lst | xargs) -y
+    chroot "chroot" mita-i-appimage-installer fetch $(sed "s|#.*||g" ../data/${variant}/appimages-urls.lst | xargs) -y
     echo
 }
 
@@ -246,7 +247,7 @@ function chroot-phase-7  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Snaps" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' ../data/snaps.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/snaps.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -259,7 +260,7 @@ function chroot-phase-7  {
     fi
     echo "  - Installing packages"
     echo
-    chroot "chroot" snap install $(sed "s|#.*||g" ../data/snaps.lst | xargs) -y
+    chroot "chroot" snap install $(sed "s|#.*||g" ../data/${variant}/snaps.lst | xargs) -y
     echo
 }
 
@@ -375,12 +376,12 @@ function chroot-phase-9 {
     echo
     mkdir -p chroot/etc/apt/preferences.d/
 
-    if [ "$(sed 's|#.*||g' ../data/remove-packages-content.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages-content.lst | xargs)" = "" ]; then
       echo "No packages to remove contents"
       return
     fi
 
-    for package in $(sed "s|#.*||g" ../data/remove-packages-content.lst | xargs); do
+    for package in $(sed "s|#.*||g" ../data/${variant}/remove-packages-content.lst | xargs); do
       echo "Removing '${package}' content"
       for file in $(cat "chroot/var/lib/dpkg/info/${package}.list"); do
         if [ -f "chroot/${file}" ]; then
@@ -426,7 +427,7 @@ function cleanup {
 
     echo "  - Hide useless itens from menu"
     mkdir -p chroot/usr/local/share/applications
-    for file in $(sed "s|#.*||g" ../data/hide-from-menu.lst | xargs); do
+    for file in $(sed "s|#.*||g" ../data/${variant}/hide-from-menu.lst | xargs); do
       if [ -f "chroot/usr/local/share/applications/${file}" ]; then
         rm "chroot/usr/local/share/applications/${file}"
       fi
@@ -498,7 +499,7 @@ function build-grub {
     cp --dereference chroot/boot/initrd.img image/casper/initrd
 
     (
-        sed "s|#.*||g" ../data/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry "|;s|$|\n  initrd /casper/initrd\n}\n|;s|:|" {\n  |'
+        sed "s|#.*||g" ../data/${variant}/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry "|;s|$|\n  initrd /casper/initrd\n}\n|;s|:|" {\n  |'
         
         echo "menuentry \"Reboot\" {reboot}"
         echo "menuentry \"Shutdown\" {halt}"
@@ -654,6 +655,11 @@ trap EXIT EXIT
 script=$(readlink -f "${0}")
 step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template" | wc -l)
 current_step=0
+#-----------------------------------------------------------------------------------------------------------------------------------------
+if [ "$SUDO_USER" ] && [ "$USER" = "$SUDO_USER" ]; then
+    echo "This is script was made to run as sudo -EH"
+    exit 1
+fi
 #-----------------------------------------------------------------------------------------------------------------------------------------
 dependencies=(debootstrap mtools squashfs-tools xorriso casper lib32gcc-s1 grub-common grub-pc-bin grub-efi)
 missing=""
