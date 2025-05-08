@@ -1,0 +1,13 @@
+# Entradas customizadas do GRUB
+# Variáveis:
+#
+#  ${grub_name} -> Nome de exibição do sistema no GRUB
+#  ${name}      -> Nome da distribuição
+#  ${name}      -> Nome da distribuição
+#  ${splash}    -> Flag de splash (usualmente, quiet splash)
+#  ${host}      -> Nome do host padrão
+#  ${user}      -> Nome do usuário no modo live
+#  ${locale}    -> Idioma do sistema
+
+${grub_name}: linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} ---"
+${grub_name} (Modo Recovery): linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} recovery ---"
