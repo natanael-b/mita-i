@@ -263,7 +263,7 @@ function chroot-phase-7  {
     echo
 }
 
-function chroot-phase-6 {
+function chroot-phase-8 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
@@ -366,7 +366,7 @@ function chroot-phase-6 {
     )
 }
 
-function chroot-phase-7 {
+function chroot-phase-9 {
     current_step=$((current_step+1))
     echo
     echo "---------------------------------------------------------"
