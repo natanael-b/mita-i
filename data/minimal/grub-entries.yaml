@@ -14,5 +14,4 @@
 #   ${locale}         -> Localização padrão e idioma do sistema
 #   ${timezone}       -> Fuso-horário padrão para caso Geo-Ip falhe
 #
-${grub_name}: linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} ---"
-${grub_name} (Modo Recovery): linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} recovery ---"
+${grub_name}: linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=${locale} ---
