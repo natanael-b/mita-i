@@ -29,7 +29,6 @@ function extract-image {
 
     mkdir -p chroot
     ln -s chroot/ squashfs-root
-    read
     unsquashfs -f base/filesystem.squashfs
     rm squashfs-root
 
