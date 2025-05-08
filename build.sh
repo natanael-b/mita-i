@@ -406,7 +406,7 @@ function chroot-phase-9 {
       chroot chroot/ md5sum "etc/apt/preferences.d/${package}" > chroot/var/lib/dpkg/info/${package}.md5sums
 
       echo "  - Removing triggers"
-      for trigger in conffiles postrm prerm postinst preinst shlibs triggers do
+      for trigger in conffiles postrm prerm postinst preinst shlibs triggers; do
         if [ -f "chroot/var/lib/dpkg/info/${package}.${trigger}" ]; then
           rm "chroot/var/lib/dpkg/info/${package}.${trigger}"
         fi
@@ -651,21 +651,6 @@ function EXIT {
 trap EXIT EXIT
 
 #-----------------------------------------------------------------------------------------------------------------------------------------
-variant=$(basename "${1}")
-if [ "${variant}" = "" ]; then
-  echo "Warning: Variant not specified fallbacking to 'minimal'"
-  variant="minimal"
-fi
-
-if [ -f "${variant}/distro.ini" = "" ]; then
-  echo "Fatal: Missing distro descriptor in variant '${variant}'"
-  variant="minimal"
-fi
-#-----------------------------------------------------------------------------------------------------------------------------------------
-iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
-iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
-url="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/${iso_file}"
-#-----------------------------------------------------------------------------------------------------------------------------------------
 script=$(readlink -f "${0}")
 step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template" | wc -l)
 current_step=0
@@ -694,9 +679,8 @@ if echo "${variant}" | grep -qE '[ /]'; then
 fi
 
 if [ "${variant}" = "" ]; then
-  echo "Error: A variant is required, avaialables:"
-  ls data
-  exit 1
+  echo "Warning: Variant not specified fallbacking to 'minimal'"
+  variant="minimal"
 fi
 
 if [ ! -f "data/${variant}/distro.ini" ]; then
@@ -707,7 +691,13 @@ fi
 #-----------------------------------------------------------------------------------------------------------------------------------------
 source ./data/${variant}/distro.ini
 #-----------------------------------------------------------------------------------------------------------------------------------------
-mkdir -p ${variant} debian-packages image/{boot/grub,casper,isolinux,preseed} ;
+iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
+iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
+url="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/${iso_file}"
+#-----------------------------------------------------------------------------------------------------------------------------------------
+mkdir -p ${variant}
+cd ${variant}
+mkdir -p iso chroot image/{boot/grub,casper,isolinux,preseed} ;
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 download-image
