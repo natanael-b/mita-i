@@ -134,7 +134,7 @@ function chroot-phase-2 {
     find chroot/etc/systemd -name "*snap*" -delete
     find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
 
-    if [ "$(sed 's|#.*||g' data/remove-packages-content.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/remove-packages-content.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to remove"
       return
     fi
@@ -148,7 +148,7 @@ function chroot-phase-3 {
     echo "  Step ${current_step}/${step_count} - Instala pacotes extras" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' data/install-packages.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -162,14 +162,14 @@ function chroot-phase-4  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Debian" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' data/debian-packages-urls.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/debian-packages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
     echo "  - Downloading packages"
     echo
     mkdir -p "chroot/mita-i.debian-packages"
-    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g" data/debian-packages-urls.lst | xargs)
+    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g"  data/debian-packages-urls.lst  | sed '/^$/d' | xargs)
     echo
 
     echo "  - Installing packages"
@@ -190,7 +190,7 @@ function chroot-phase-5  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Flatpak" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' data/flatpaks.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -221,7 +221,7 @@ function chroot-phase-6  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes AppImage" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' data/appimages-urls.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/appimages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -246,7 +246,7 @@ function chroot-phase-7  {
     echo "  Step ${current_step}/${step_count} - Baixar pacotes Snaps" 
     echo "---------------------------------------------------------"
     echo
-    if [ "$(sed 's|#.*||g' data/snaps.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' data/snaps.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
@@ -498,49 +498,40 @@ function build-grub {
     cp --dereference chroot/boot/initrd.img image/casper/initrd
 
     (
-        echo
-        echo "menuentry \"${grub_name}\" {"
-        echo "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} (Modo Recovery)\" {"
-        echo "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR recovery ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} (Modo Recovery - failseafe)\" {"
-        echo "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR nomodeset recovery ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} (Modo de desempenho - Inseguro)\" {"
-        echo "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR mitigations=off ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} (Iniciar na RAM)\" {"
-        echo "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR toram ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} - NVIDIA Legacy\" {"
-        echo -n "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR"
-        echo    "   modprobe.blacklist=nvidia,nvidia_uvm,nvidia_drm,nvidia_modeset ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
-
-        echo "menuentry \"${grub_name} - Intel Atom(R) (Modo Compatibilidade)\" {"
-        echo -n "   linux /casper/vmlinuz file=/cdrom/preseed/${name}.seed boot=casper ${splash} username=${user} hostname=${host} locale=pt_BR"
-        echo    "   rtl8723bs.11n_disable=1 modprobe.blacklist=snd_hdmi_lpe_audio mitigations=off snd_sof.sof_debug=1 ipv6.disable=1 iatom=1 ---"
-        echo "   initrd /casper/initrd"
-        echo "}"
+        sed "s|#.*||g" data/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry "|;s|$|\n  initrd /casper/initrd\n}\n|;s|:|" {\n  |'
         
         echo "menuentry \"Reboot\" {reboot}"
         echo "menuentry \"Shutdown\" {halt}"
         echo
     ) > image/boot/grub/loopback.cfg
 
+    local escaped_user=$(printf '%s\n'           "$user"            | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_host=$(printf '%s\n'           "$host"            | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_name=$(printf '%s\n'           "$name"            | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_grub_name=$(printf '%s\n'      "$grub_name"       | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_splash=$(printf '%s\n'         "$splash"          | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_keyboard=$(printf '%s\n'       "$keyboard"        | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_base=$(printf '%s\n'           "$base"            | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_system_dir=$(printf '%s\n'     "$system_dir"      | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_system_version=$(printf '%s\n' "$system_version"  | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_flavour=$(printf '%s\n'        "$flavour"         | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_locale=$(printf '%s\n'         "$locale"          | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+    local escaped_timezone=$(printf '%s\n'       "$timezone"        | sed -e 's/[\/&]/\\&/g;s/"/\\"/g')
+
+    sed -i \
+      -e "s/\${user}/$escaped_user/g"                     \
+      -e "s/\${host}/$escaped_host/g"                     \
+      -e "s/\${name}/$escaped_name/g"                     \
+      -e "s/\${grub_name}/$escaped_grub_name/g"           \
+      -e "s/\${splash}/$escaped_splash/g"                 \
+      -e "s/\${keyboard}/$escaped_keyboard/g"             \
+      -e "s/\${base}/$escaped_base/g"                     \
+      -e "s/\${system_dir}/$escaped_system_dir/g"         \
+      -e "s/\${system_version}/$escaped_system_version/g" \
+      -e "s/\${flavour}/$escaped_flavour/g"               \
+      -e "s/\${locale}/$escaped_locale/g"                 \
+      -e "s/\${timezone}/$escaped_timezone/g"             \
+      image/boot/grub/loopback.cfg
 
     (
         echo
