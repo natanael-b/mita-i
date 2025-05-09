@@ -1,8 +1,22 @@
 #!/usr/bin/env bash
-
+#
+#  Build process functions
+#
+#-----------------------------------------------------------------------------------------------------------------------------------------
+#
+#  To extend the script place function on appropriate place based on the following boilerplate:
+#
+function function-template {
+  show-header "Name of step"
+  # Function body here, ${variant_data_dir} holds the variant
+  # lists disrectory
+}
+#
+#  Note: Functions are executed in the order of declaration.
+#
 #-----------------------------------------------------------------------------------------------------------------------------------------
 function download-image {
-    show-header "Downloading ISO image"
+    show-header "Download ISO image"
 
     mkdir -p base
 
@@ -18,7 +32,7 @@ function download-image {
 }
 
 function extract-image {
-    show-header "Extracting image"
+    show-header "Extract image"
 
     (
       cd base
@@ -31,7 +45,7 @@ function extract-image {
       rm -f filesystem.manifest-remove
       rm -f filesystem.squashfs.gpg
     )
-
+    echo
     mkdir -p chroot
     ln -s chroot/ squashfs-root
     unsquashfs -f base/filesystem.squashfs
@@ -50,21 +64,11 @@ function mount-virtual-fs {
 
     mkdir -p chroot/{dev/pts,run,proc,sys}
 
-    echo "  - Mounting /dev"
-    mount --bind /dev "chroot/dev"
-
-    echo "  - Mounting /run"
-    mount --bind /run "chroot/run"
-
-    echo "  - Mounting /proc"
-    chroot "chroot" mount none -t proc /proc
-
-    echo "  - Mounting /dev/pts"
-    chroot "chroot" mount none -t devpts /dev/pts
+    --bind-mount
 }
 
-function chroot-phase-1 {
-    show-header "Preparing base image" 
+function prepare-base-image {
+    show-header "Prepare base image" 
 
     # Fix permissions to /var/lib/apt/lists
     chroot "chroot" mkdir -p /var/lib/apt/lists
@@ -119,7 +123,7 @@ WantedBy=sysinit.target
     chroot "chroot" apt install casper ${kernel} --reinstall --allow-downgrades -y
 }
 
-function chroot-phase-2 {
+function apply-mitai-root-structure {
     show-header "Apply Mita'i OS root structure" 
 
     (
@@ -237,8 +241,8 @@ function chroot-phase-2 {
     )
 }
 
-function chroot-phase-3 {
-    show-header "Removing base packages" 
+function remove-base-packages {
+    show-header "Remove base packages" 
 
     # Remove snaps only to reduce ISO size, snaps are freinds :)
     rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
@@ -246,24 +250,24 @@ function chroot-phase-3 {
     find chroot/etc/systemd -name "*snap*" -delete
     find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/remove-packages.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to remove"
       return
     fi
-    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" ../data/${variant}/remove-packages.lst | xargs) -y   
+    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" "${variant_data_dir}/remove-packages.lst" | xargs) -y   
 }
 
-function chroot-phase-4  {
+function install-debian-packages  {
     show-header "Install Debian packages outside repositories" 
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/debian-packages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/debian-packages-urls.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No Debian packages to install"
       return
     fi
     echo "  - Downloading packages"
     echo
     mkdir -p "chroot/mita-i.debian-packages"
-    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g"  ../data/${variant}/debian-packages-urls.lst  | sed '/^$/d' | xargs)
+    wget --quiet --show-progress -P "chroot/mita-i.debian-packages" $(sed "s|#.*||g" "${variant_data_dir}/debian-packages-urls.lst"  | sed '/^$/d' | xargs)
     echo
 
     echo "  - Installing packages"
@@ -277,20 +281,20 @@ function chroot-phase-4  {
     echo
 }
 
-function chroot-phase-5 {
+function install-system-packages {
     show-header "Install extra packages" 
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/install-packages.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
       return
     fi
-    chroot "chroot" apt install $(sed "s|#.*||g" ../data/${variant}/install-packages.lst | xargs) -y
+    chroot "chroot" apt install $(sed "s|#.*||g" "${variant_data_dir}/install-packages.lst" | xargs) -y
 }
 
-function chroot-phase-6  {
+function install-flapak-packages  {
     show-header "Install Flatpak packages" 
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/flatpaks.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No Flatpak packages to install"
       return
     fi
@@ -310,14 +314,14 @@ function chroot-phase-6  {
     echo
     echo "  - Installing packages"
     echo
-    chroot "chroot" flatpak install $(sed "s|#.*||g" ../data/${variant}/flatpaks.lst | xargs) -y
+    chroot "chroot" flatpak install $(sed "s|#.*||g" "${variant_data_dir}/flatpaks.lst" | xargs) -y
     echo
 }
 
-function chroot-phase-7  {
+function install-appimage-packages  {
     show-header "Install AppImage packages" 
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/appimages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/appimages-urls.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No AppImage packages to install"
       return
     fi
@@ -331,14 +335,14 @@ function chroot-phase-7  {
 
     echo "  - Installing packages"
     echo
-    chroot "chroot" mita-i-appimage-installer fetch $(sed "s|#.*||g" ../data/${variant}/appimages-urls.lst | xargs) -y
+    chroot "chroot" mita-i-appimage-installer fetch $(sed "s|#.*||g" "${variant_data_dir}/appimages-urls.lst" | xargs) -y
     echo
 }
 
-function chroot-phase-8  {
+function install-snap-packages  {
     show-header "Install Snaps packages" 
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/snaps.lst | sed '/^$/d' | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/snaps.lst" | sed '/^$/d' | xargs)" = "" ]; then
       echo "No Snap packages to install"
       return
     fi
@@ -351,21 +355,21 @@ function chroot-phase-8  {
     fi
     echo "  - Installing packages"
     echo
-    chroot "chroot" snap install $(sed "s|#.*||g" ../data/${variant}/snaps.lst | xargs) -y
+    chroot "chroot" snap install $(sed "s|#.*||g" "${variant_data_dir}/snaps.lst" | xargs) -y
     echo
 }
 
-function chroot-phase-9 {
+function remove-packages-contents {
     show-header "Remove package contents" 
 
     mkdir -p chroot/etc/apt/preferences.d/
 
-    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages-content.lst | xargs)" = "" ]; then
+    if [ "$(sed 's|#.*||g' "${variant_data_dir}/remove-packages-content.lst" | xargs)" = "" ]; then
       echo "No packages to remove contents"
       return
     fi
 
-    for package in $(sed "s|#.*||g" ../data/${variant}/remove-packages-content.lst | xargs); do
+    for package in $(sed "s|#.*||g" "${variant_data_dir}/remove-packages-content.lst" | xargs); do
       echo "Removing '${package}' content"
       for file in $(cat "chroot/var/lib/dpkg/info/${package}.list"); do
         if [ -f "chroot/${file}" ]; then
@@ -401,12 +405,12 @@ function chroot-phase-9 {
     chroot chroot/ apt-get update
 }
 
-function cleanup {
-    show-header "Cleaning the system image" 
+function cleanup-system-image {
+    show-header "Clear the system image" 
 
     echo "  - Hide useless itens from menu"
     mkdir -p chroot/usr/local/share/applications
-    for file in $(sed "s|#.*||g" ../data/${variant}/hide-from-menu.lst | xargs); do
+    for file in $(sed "s|#.*||g" "${variant_data_dir}/hide-from-menu.lst" | xargs); do
       if [ -f "chroot/usr/local/share/applications/${file}" ]; then
         rm "chroot/usr/local/share/applications/${file}"
       fi
@@ -422,26 +426,12 @@ function cleanup {
 }
 
 function umount-virtual-fs {
-    show-header "Finishing virtual FS" 
+    show-header "Finish virtual FS" 
 
     echo "RESUME=none"   > "chroot/etc/initramfs-tools/conf.d/resume"
     echo "FRAMEBUFFER=y" > "chroot/etc/initramfs-tools/conf.d/splash"
 
-    mounts=(
-        "chroot/dev/pts"
-        "chroot/dev"
-        "chroot/proc"
-        "chroot/run"
-        "chroot/debian-packages"
-    )
-
-    for mount_point in "${mounts[@]}"; do
-        while mountpoint -q "${mount_point}"; do
-            echo "  - Unmounting ${mount_point}"
-            umount -l "${mount_point}" 2>/dev/null
-            sleep 0.5
-        done
-    done
+    --bind-umount
 
     # Cleanup history and cache
     rm -rf chroot/tmp/*
@@ -451,20 +441,20 @@ function umount-virtual-fs {
 }
 
 function build-squashfs {
-    show-header "Compressing system image"
+    show-header "Compress system image"
 
     mkdir -pv image/{boot/grub,casper,isolinux,preseed}
     mksquashfs chroot image/casper/filesystem.squashfs -comp xz -noappend
 }
 
 function build-grub {
-    show-header "Building GRUB image"
+    show-header "Build GRUB image"
 
     cp --dereference chroot/boot/vmlinuz    image/casper/vmlinuz
     cp --dereference chroot/boot/initrd.img image/casper/initrd
 
     (
-        sed "s|#.*||g" ../data/${variant}/grub-entries.yaml  | sed '/^$/d' | sed 's|^|menuentry |;s|$|\n  initrd /casper/initrd\n}\n|;s|:| {\n  |'
+        sed "s|#.*||g" "${variant_data_dir}/grub-entries.yaml"  | sed '/^$/d' | sed 's|^|menuentry |;s|$|\n  initrd /casper/initrd\n}\n|;s|:| {\n  |'
         
         echo "menuentry \"Reboot\" {reboot}"
         echo "menuentry \"Shutdown\" {halt}"
@@ -561,7 +551,7 @@ function build-grub {
 }
 
 function build-iso {
-    show-header "Generating ISO image"
+    show-header "Generate ISO image"
 
     cd image
     bash -c '(find . -type f -print0 | xargs -0 md5sum | grep -v "\./md5sum.txt" > md5sum.txt)'
@@ -586,10 +576,8 @@ function build-iso {
     
     [ -f "${ISO}" ] && {
         echo
-        echo "---------------------------------------------------------"
-        echo "  ISO: "
+        echo "  ISO image file: "
         echo "    "$( du -sh "${ISO}")
-        echo "---------------------------------------------------------"
         echo
 
         exit 0
@@ -620,8 +608,48 @@ function EXIT {
 }
 trap EXIT EXIT
 #-----------------------------------------------------------------------------------------------------------------------------------------
+function --bind-umount {
+    mounts=(
+        "chroot/dev/pts"
+        "chroot/dev"
+        "chroot/proc"
+        "chroot/run"
+        "chroot/debian-packages"
+    )
+
+    for mount_point in "${mounts[@]}"; do
+        while mountpoint -q "${mount_point}"; do
+            echo "  - Unmounting ${mount_point}"
+            umount -l "${mount_point}" 2>/dev/null
+            sleep 0.5
+        done
+    done
+}
+#-----------------------------------------------------------------------------------------------------------------------------------------
+function --help  {
+  d
+}
+function --bind-mount {
+    echo "  - Mounting /dev"
+    mount --bind /dev "chroot/dev"
+
+    echo "  - Mounting /run"
+    mount --bind /run "chroot/run"
+
+    echo "  - Mounting /proc"
+    chroot "chroot" mount none -t proc /proc
+
+    echo "  - Mounting /dev/pts"
+    chroot "chroot" mount none -t devpts /dev/pts
+}
+#-----------------------------------------------------------------------------------------------------------------------------------------
+function --enter-chroot {
+  show-header "Entering chroot now..."
+  chroot "chroot"
+}
+#-----------------------------------------------------------------------------------------------------------------------------------------
 script=$(readlink -f "${0}")
-step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template|show-header" | wc -l)
+step_count=$(grep "^function" ${script} | grep -Ev -- "--help|EXIT|function-template|show-header|--enter-chroot" | wc -l)
 current_step=0
 #-----------------------------------------------------------------------------------------------------------------------------------------
 if [ "$SUDO_USER" ] && [ "$USER" = "$SUDO_USER" ]; then
@@ -639,7 +667,6 @@ done
 #-----------------------------------------------------------------------------------------------------------------------------------------
 cd "$(dirname "$(readlink -f "${0}")")"
 #-----------------------------------------------------------------------------------------------------------------------------------------
-
 variant="${1}"
 
 if [ ! -d "data" ]; then
@@ -662,8 +689,9 @@ if [ ! -f "data/${variant}/distro.ini" ]; then
   exit 1
 fi
 
+variant_data_dir=$(readlink -f "./data/${variant}")
 #-----------------------------------------------------------------------------------------------------------------------------------------
-source ./data/${variant}/distro.ini
+source "${variant_data_dir}/distro.ini"
 #-----------------------------------------------------------------------------------------------------------------------------------------
 iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
 iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
@@ -673,5 +701,39 @@ mkdir -p ${variant}
 cd ${variant}
 mkdir -p iso chroot image/{boot/grub,casper,isolinux,preseed} ;
 #-----------------------------------------------------------------------------------------------------------------------------------------
-eval "$(grep '^function' ${script} | grep -Ev "print-help|EXIT|function-template|show-header" | cut -d' ' -f2 | tr '\n' ';')"
+if [ "${2}" = "--help" ]; then
+  --help has-variant
+  exit
+fi
+#-----------------------------------------------------------------------------------------------------------------------------------------
+if [ "${1}" = "--help" ]; then
+  --help
+  exit
+fi
+#-----------------------------------------------------------------------------------------------------------------------------------------
+if [ ! "${2}" = "" ]; then
+  option=$(grep '^function' "${script}" | grep -Ev "EXIT|function-template|show-header|--bind-.*|mount-virtual-fs" | cut -d' ' -f2 | grep -- ^"${2}"$)
+  if [ ! "${option}" == "" ]; then
+    step_count=3
+
+    show-header "Initialize virtual FS"
+    --bind-mount
+
+    unset option
+    eval "'$(grep '^function' "${script}" | grep -Ev 'EXIT|function-template|show-header|--bind-.*|mount-virtual-fs' | cut -d' ' -f2 | grep -- ^${2}$)'"
+
+    show-header "Finish virtual FS" 
+    --bind-umount
+
+    echo
+    exit
+  fi
+  echo "Unknown option '${2}' availables:"
+  echo
+  grep '^function' "${script}" | grep -Ev  -- "EXIT|function-template|show-header|--bind-.*|mount-virtual-fs" | cut -d' ' -f2  | grep "" | sort | sed 's|^|  * |'
+  echo
+  exit 1
+fi
+#-----------------------------------------------------------------------------------------------------------------------------------------
+eval "$(grep '^function' ${script} | grep -Ev -- "^--|EXIT|function-template|show-header" | cut -d' ' -f2 | tr '\n' ';')"
 #-----------------------------------------------------------------------------------------------------------------------------------------
