@@ -1,31 +1,36 @@
 #!/usr/bin/env bash
 
+#-----------------------------------------------------------------------------------------------------------------------------------------
 function download-image {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Download image" 
-    echo "---------------------------------------------------------"
-
-    [ -f "base/filesystem.squashfs" ] && { return ; } || { echo ; }
+    show-header "Downloading ISO image"
 
     mkdir -p base
-    cd base
 
-    wget -c "${url}" -O "${flavour}.iso"
-    osirrox -indev "${flavour}.iso" -extract /casper .
-    rm -f filesystem.manifest filesystem.size filesystem.manifest-minimal-remove filesystem.manifest-remove filesystem.squashfs.gpg
-    
-    cd ..
+    [ -f "base/${flavour}.iso" ] && {
+      echo "The file is already fully retrieved; nothing to do."
+      return;
+    }
+
+    (
+      cd base
+      wget --quiet --show-progress -c "${url}" -O "${flavour}.iso"
+    )
 }
 
 function extract-image {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Extracting image" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Extracting image"
+
+    (
+      cd base
+      osirrox -indev "${flavour}.iso" -extract /casper .
+
+      rm -f squashfs-root 
+      rm -f filesystem.manifest
+      rm -f filesystem.size
+      rm -f filesystem.manifest-minimal-remove
+      rm -f filesystem.manifest-remove
+      rm -f filesystem.squashfs.gpg
+    )
 
     mkdir -p chroot
     ln -s chroot/ squashfs-root
@@ -41,11 +46,7 @@ function extract-image {
 }
 
 function mount-virtual-fs {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Initialize virtual FS" 
-    echo "---------------------------------------------------------"
+    show-header "Initialize virtual FS"
 
     mkdir -p chroot/{dev/pts,run,proc,sys}
 
@@ -63,12 +64,8 @@ function mount-virtual-fs {
 }
 
 function chroot-phase-1 {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Preparing base image" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Preparing base image" 
+
     # Fix permissions to /var/lib/apt/lists
     chroot "chroot" mkdir -p /var/lib/apt/lists
     chroot "chroot" chown -R _apt:root /var/lib/apt/lists
@@ -114,7 +111,7 @@ RemainAfterExit=yes
 WantedBy=sysinit.target
 ' > "chroot/etc/systemd/system/mita-i-etc-merge.service"
     mkdir -p /etc/systemd/system/sysinit.target.wants
-    chroot "chroot" ln -s /etc/systemd/system/mita-i-etc-merge.service /etc/systemd/system/sysinit.target.wants/mita-i-etc-merge.service
+    chroot "chroot" ln -fs /etc/systemd/system/mita-i-etc-merge.service /etc/systemd/system/sysinit.target.wants/mita-i-etc-merge.service
 
     # Regenerate vmlinuz
     local kernel=$(chroot chroot/ dpkg -l | grep linux-image-.*-generic | cut -d' ' -f 3)
@@ -123,33 +120,7 @@ WantedBy=sysinit.target
 }
 
 function chroot-phase-2 {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Remove pacotes indesejados" 
-    echo "---------------------------------------------------------"
-    echo
-
-    # Remove snaps only to reduce ISO size, snaps are freinds :)
-    rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
-    mkdir -p chroot/var/lib/snapd chroot/var/snap chroot/usr/lib/snapd
-    find chroot/etc/systemd -name "*snap*" -delete
-    find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
-
-    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
-      echo "No packages to remove"
-      return
-    fi
-    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" ../data/${variant}/remove-packages.lst | xargs) -y   
-}
-
-function chroot-phase-3 {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Aplica a estrutura do Mita'i OS" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Apply Mita'i OS root structure" 
 
     (
       cd "chroot"
@@ -266,29 +237,27 @@ function chroot-phase-3 {
     )
 }
 
-function chroot-phase-4 {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Instala pacotes extras" 
-    echo "---------------------------------------------------------"
-    echo
-    if [ "$(sed 's|#.*||g' ../data/${variant}/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
-      echo "No packages to install"
+function chroot-phase-3 {
+    show-header "Removing base packages" 
+
+    # Remove snaps only to reduce ISO size, snaps are freinds :)
+    rm -rf chroot/var/lib/snapd chroot/snap chroot/var/snap chroot/usr/lib/snapd
+    mkdir -p chroot/var/lib/snapd chroot/var/snap chroot/usr/lib/snapd
+    find chroot/etc/systemd -name "*snap*" -delete
+    find chroot/etc/systemd -type d -name "*snap*" -exec rm -r {} +
+
+    if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
+      echo "No packages to remove"
       return
     fi
-    chroot "chroot" apt install $(sed "s|#.*||g" ../data/${variant}/install-packages.lst | xargs) -y
+    chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" ../data/${variant}/remove-packages.lst | xargs) -y   
 }
 
-function chroot-phase-5  {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Baixar pacotes Debian" 
-    echo "---------------------------------------------------------"
-    echo
+function chroot-phase-4  {
+    show-header "Install Debian packages outside repositories" 
+
     if [ "$(sed 's|#.*||g' ../data/${variant}/debian-packages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
-      echo "No packages to install"
+      echo "No Debian packages to install"
       return
     fi
     echo "  - Downloading packages"
@@ -308,15 +277,21 @@ function chroot-phase-5  {
     echo
 }
 
-function chroot-phase-6  {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Baixar pacotes Flatpak" 
-    echo "---------------------------------------------------------"
-    echo
-    if [ "$(sed 's|#.*||g' ../data/${variant}/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
+function chroot-phase-5 {
+    show-header "Install extra packages" 
+
+    if [ "$(sed 's|#.*||g' ../data/${variant}/install-packages.lst | sed '/^$/d' | xargs)" = "" ]; then
       echo "No packages to install"
+      return
+    fi
+    chroot "chroot" apt install $(sed "s|#.*||g" ../data/${variant}/install-packages.lst | xargs) -y
+}
+
+function chroot-phase-6  {
+    show-header "Install Flatpak packages" 
+
+    if [ "$(sed 's|#.*||g' ../data/${variant}/flatpaks.lst | sed '/^$/d' | xargs)" = "" ]; then
+      echo "No Flatpak packages to install"
       return
     fi
     echo "  - Checking for flatpak"
@@ -340,14 +315,10 @@ function chroot-phase-6  {
 }
 
 function chroot-phase-7  {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Baixar pacotes AppImage" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Install AppImage packages" 
+
     if [ "$(sed 's|#.*||g' ../data/${variant}/appimages-urls.lst | sed '/^$/d' | xargs)" = "" ]; then
-      echo "No packages to install"
+      echo "No AppImage packages to install"
       return
     fi
     echo "  - Checking for Mita-i-appimage-installer"
@@ -365,14 +336,10 @@ function chroot-phase-7  {
 }
 
 function chroot-phase-8  {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Baixar pacotes Snaps" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Install Snaps packages" 
+
     if [ "$(sed 's|#.*||g' ../data/${variant}/snaps.lst | sed '/^$/d' | xargs)" = "" ]; then
-      echo "No packages to install"
+      echo "No Snap packages to install"
       return
     fi
     echo "  - Checking for snapd"
@@ -389,12 +356,8 @@ function chroot-phase-8  {
 }
 
 function chroot-phase-9 {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Remove falsamente pacotes" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Remove package contents" 
+
     mkdir -p chroot/etc/apt/preferences.d/
 
     if [ "$(sed 's|#.*||g' ../data/${variant}/remove-packages-content.lst | xargs)" = "" ]; then
@@ -439,12 +402,7 @@ function chroot-phase-9 {
 }
 
 function cleanup {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Limpeza final do Mita'i OS" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Cleaning the system image" 
 
     echo "  - Hide useless itens from menu"
     mkdir -p chroot/usr/local/share/applications
@@ -464,12 +422,7 @@ function cleanup {
 }
 
 function umount-virtual-fs {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Finishing virtual FS" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Finishing virtual FS" 
 
     echo "RESUME=none"   > "chroot/etc/initramfs-tools/conf.d/resume"
     echo "FRAMEBUFFER=y" > "chroot/etc/initramfs-tools/conf.d/splash"
@@ -498,23 +451,14 @@ function umount-virtual-fs {
 }
 
 function build-squashfs {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Rebuilding image" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Compressing system image"
 
     mkdir -pv image/{boot/grub,casper,isolinux,preseed}
     mksquashfs chroot image/casper/filesystem.squashfs -comp xz -noappend
 }
 
 function build-grub {
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Build GRUB image" 
-    echo "---------------------------------------------------------"
+    show-header "Building GRUB image"
 
     cp --dereference chroot/boot/vmlinuz    image/casper/vmlinuz
     cp --dereference chroot/boot/initrd.img image/casper/initrd
@@ -617,15 +561,9 @@ function build-grub {
 }
 
 function build-iso {
-    cd image
-    
-    current_step=$((current_step+1))
-    echo
-    echo "---------------------------------------------------------"
-    echo "  Step ${current_step}/${step_count} - Building ISO file" 
-    echo "---------------------------------------------------------"
-    echo
+    show-header "Generating ISO image"
 
+    cd image
     bash -c '(find . -type f -print0 | xargs -0 md5sum | grep -v "\./md5sum.txt" > md5sum.txt)'
     mkdir -pv ../iso
 
@@ -660,7 +598,18 @@ function build-iso {
     echo "Failed to generate ISO"
     exit 1
 }
+#-----------------------------------------------------------------------------------------------------------------------------------------
+function show-header {
+    current_step=$((current_step+1))
+    local progress="${current_step}/${step_count}"
 
+    echo
+    echo "---------------------------------------------------------------------"
+    echo "  Step ${progress} - ${1}" 
+    echo "---------------------------------------------------------------------"
+    echo
+}
+#-----------------------------------------------------------------------------------------------------------------------------------------
 function EXIT {
     # Let's make everything as possible to keep base 
     # system on a consistent state
@@ -669,12 +618,10 @@ function EXIT {
     } &> /dev/null
      2>&1 > /dev/null
 }
-
 trap EXIT EXIT
-
 #-----------------------------------------------------------------------------------------------------------------------------------------
 script=$(readlink -f "${0}")
-step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template" | wc -l)
+step_count=$(grep "^function" ${script} | grep -Ev "print-help|EXIT|function-template|show-header" | wc -l)
 current_step=0
 #-----------------------------------------------------------------------------------------------------------------------------------------
 if [ "$SUDO_USER" ] && [ "$USER" = "$SUDO_USER" ]; then
@@ -726,24 +673,5 @@ mkdir -p ${variant}
 cd ${variant}
 mkdir -p iso chroot image/{boot/grub,casper,isolinux,preseed} ;
 #-----------------------------------------------------------------------------------------------------------------------------------------
-
-download-image
-extract-image
-mount-virtual-fs
-chroot-phase-1
-chroot-phase-2
-chroot-phase-3
-chroot-phase-4
-chroot-phase-5
-chroot-phase-6
-chroot-phase-7
-chroot-phase-8
-chroot-phase-9
-cleanup
-umount-virtual-fs
-build-squashfs
-build-grub
-build-iso
-
+eval "$(grep '^function' ${script} | grep -Ev "print-help|EXIT|function-template|show-header" | cut -d' ' -f2 | tr '\n' ';')"
 #-----------------------------------------------------------------------------------------------------------------------------------------
-
