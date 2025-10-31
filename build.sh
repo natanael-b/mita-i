@@ -15,15 +15,46 @@ function function-template {
 #  Note: Functions are executed in the order of declaration.
 #
 #-----------------------------------------------------------------------------------------------------------------------------------------
+function check-build-dependencies {
+  show-header "Check for build dependencies..."
+
+  declare -A commandMap=(
+    [mmd]="dosfstools"
+    [mcopy]="mtools"
+    [grub-mkstandalone]="grub-common"
+    [osirrox]="xorriso"
+    [unsquashfs]="unsquashfs"
+    [wget]="wget"
+  )
+
+  missing=()
+
+  for cmd in "${!commandMap[@]}"; do
+    command -v "${cmd}" >/dev/null 2>&1 || missing+=(${commandMap[${cmd}]})
+  done
+
+  for pkg in grub-pc grub-efi-amd64-bin; do
+    if ! grep -q "Package: ${pkg}$" /var/lib/dpkg/status; then
+      missing+=(${pkg})
+    fi
+  done
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    apt update
+    apt install "${missing[@]}" -y
+    return
+  fi
+  echo "All build dependencies are already installed."
+}
+
 function download-image {
     show-header "Download ISO image"
 
     mkdir -p base
-
-    [ -f "base/${flavour}.iso" ] && {
+    if [ -f "base/${flavour}.iso" ]; then
       echo "The file is already fully retrieved; nothing to do."
       return;
-    }
+    fi
 
     (
       cd base
@@ -36,19 +67,16 @@ function extract-image {
 
     (
       cd base
-      osirrox -indev "${flavour}.iso" -extract /casper .
-
-      rm -f squashfs-root 
-      rm -f filesystem.manifest
-      rm -f filesystem.size
-      rm -f filesystem.manifest-minimal-remove
-      rm -f filesystem.manifest-remove
-      rm -f filesystem.squashfs.gpg
+      if [ ! -f "filesystem.squashfs" ]; then
+        osirrox -indev "${flavour}.iso" -extract /casper .
+        rm -f filesystem.manifest
+        rm -f filesystem.size
+        rm -f filesystem.manifest-minimal-remove
+        rm -f filesystem.manifest-remove
+        rm -f filesystem.squashfs.gpg
+      fi
     )
-    echo
-    mkdir -p chroot
-    ln -s chroot/ squashfs-root
-    unsquashfs -f base/filesystem.squashfs
+    sudo unsquashfs -d chroot -f base/filesystem.squashfs
     rm squashfs-root
 
     (
@@ -83,39 +111,8 @@ function prepare-base-image {
     chroot "chroot" sh -c "echo 'locales locales/default_environment_locale select pt_BR.UTF-8'         | debconf-set-selections"
     chroot "chroot" sh -c "echo 'debconf debconf/frontend select Noninteractive'                        | debconf-set-selections"
 
-    echo '#!/bin/bash
-if [ ! -L /etc ]; then
-  mv /etc /usr/config
-  ln -s /usr/config /etc
-
-  mkdir -p "/'${system_dir}'/shared/accounts/"
-
-  for file in passwd shadow group gshadow login.defs sudoers sudoers.d; do
-    if [ ! -L "/etc/${file}" ]; then
-      mv "/etc/${file}" "/mita-i/shared/accounts"
-    fi
-    ln -fs "/'${system_dir}'/shared/accounts/${file}" "/etc/${file}"
-  done
-fi
-' > "chroot/usr/sbin/mita-i-etc-merge"
-    chmod +x "chroot/usr/sbin/mita-i-etc-merge"
-
-    echo '[Unit]
-Description=Merge /etc with /usr
-DefaultDependencies=no
-Before=sysinit.target
-ConditionPathIsSymbolicLink=!/etc
-
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/mita-i-etc-merge
-RemainAfterExit=yes
-
-[Install]
-WantedBy=sysinit.target
-' > "chroot/etc/systemd/system/mita-i-etc-merge.service"
-    mkdir -p /etc/systemd/system/sysinit.target.wants
-    chroot "chroot" ln -fs /etc/systemd/system/mita-i-etc-merge.service /etc/systemd/system/sysinit.target.wants/mita-i-etc-merge.service
+    # Clear Plasma Taskbar
+    sed -i 's|<default>applications:.*</default>|<default></default>|g' "chroot/usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml" 
 
     # Regenerate vmlinuz
     local kernel=$(chroot chroot/ dpkg -l | grep linux-image-.*-generic | cut -d' ' -f 3)
@@ -255,6 +252,34 @@ function remove-base-packages {
       return
     fi
     chroot "chroot" apt autoremove --purge $(sed "s|#.*||g" "${variant_data_dir}/remove-packages.lst" | xargs) -y   
+}
+
+function setup-anti-breakage {
+    show-header "Prevent the user from accidentally breakage the system"
+
+    if grep -q "Package: system-anti-breakage" chroot/var/lib/dpkg/status; then
+      echo "Anti-breakage system already installed."
+      return
+    fi
+
+    local depends=$(chroot "chroot" dpkg-query -l | grep  '^ii ' | cut -d' ' -f3 | cut -d: -f1 | xargs | sed 's| |, |g')
+    mkdir -p "chroot/system-anti-breakage/DEBIAN"
+    (
+      echo "Package: system-anti-breakage"
+      echo "Version: 1.0"
+      echo "Architecture: all"
+      echo "Maintainer: Natanael Barbosa Santos"
+      echo "Depends: ${depends}"
+      echo "Priority: required"
+      echo "Essential: yes"
+      echo "Description: Prevent entire system from breaking"
+    ) > "chroot/system-anti-breakage/DEBIAN/control"
+
+    chroot "chroot" dpkg-deb --build /system-anti-breakage
+    chroot "chroot" dpkg -i /system-anti-breakage.deb
+
+    rm -rf "chroot/system-anti-breakage/"
+    rm -rf "chroot/system-anti-breakage.deb"
 }
 
 function install-debian-packages  {
@@ -574,14 +599,14 @@ function build-iso {
 
     cd ..
     
-    [ -f "${ISO}" ] && {
+    if [ -f "${ISO}" ]; then
         echo
         echo "  ISO image file: "
         echo "    "$( du -sh "${ISO}")
         echo
-
-        exit 0
-    }
+        
+        return
+    fi
 
     echo "Failed to generate ISO"
     exit 1
@@ -652,6 +677,9 @@ script=$(readlink -f "${0}")
 step_count=$(grep "^function" ${script} | grep -Ev -- "--help|EXIT|function-template|show-header|--enter-chroot" | wc -l)
 current_step=0
 #-----------------------------------------------------------------------------------------------------------------------------------------
+export LANG=C;
+export LC_ALL=C;
+#-----------------------------------------------------------------------------------------------------------------------------------------
 if [ "$SUDO_USER" ] && [ "$USER" = "$SUDO_USER" ]; then
     echo "This is script was made to run as sudo -EH"
     exit 1
@@ -696,6 +724,8 @@ source "${variant_data_dir}/distro.ini"
 iso_repository="https://cdimage.ubuntu.com/${flavour}/releases/${base}/release/"
 iso_file=$(wget -q -O - "${iso_repository}" | grep -o "kubuntu-${base}.*amd64.iso" | head -n1)
 url="https://cdimage.ubuntu.com/kubuntu/releases/${base}/release/${iso_file}"
+#-----------------------------------------------------------------------------------------------------------------------------------------
+url="https://cdimage.ubuntu.com/kubuntu/daily-live/current/resolute-desktop-amd64.iso"
 #-----------------------------------------------------------------------------------------------------------------------------------------
 mkdir -p ${variant}
 cd ${variant}
