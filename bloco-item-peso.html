@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item por Peso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-item-peso" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Item" alt="Foto do item" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho-item" class="flex items-start justify-between gap-4">
+        <div>
+          <h1 name="item-nome" class="text-xl font-semibold text-neutral-800 leading-snug">Picanha Maturada</h1>
+          <p name="item-subtitulo" class="text-sm text-neutral-400 mt-0.5">Carne selecionada a vácuo</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p name="item-preco-kg" class="text-xl font-semibold text-neutral-800">R$ 89,90</p>
+          <p name="item-unidade" class="text-xs text-neutral-400">/kg</p>
+        </div>
+      </div>
+
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed">
+        <p name="item-descricao-paragrafo-1">Picanha premium maturada por 21 dias, embalada a vácuo. Preço cobrado pelo peso exato. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong>.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- SELEÇÃO DE PESO / PORÇÃO -->
+      <div name="secao-peso" class="space-y-4">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+
+        <!-- PORÇÕES RÁPIDAS -->
+        <div name="porcoes-rapidas" class="space-y-2">
+          <p class="text-xs text-neutral-400">Porções sugeridas</p>
+          <div class="flex flex-wrap gap-2">
+            <button name="porcao-250" onclick="selecionarPorcao(this, 250)" class="porcao-btn cursor-pointer rounded-xl px-3 py-2 text-center">
+              <p name="porcao-250-label" class="text-xs font-semibold text-neutral-700">250g</p>
+              <p name="porcao-250-serve" class="text-[10px] text-neutral-400">1 pessoa</p>
+            </button>
+            <button name="porcao-500" onclick="selecionarPorcao(this, 500)" class="porcao-btn cursor-pointer rounded-xl px-3 py-2 text-center">
+              <p name="porcao-500-label" class="text-xs font-semibold text-neutral-700">500g</p>
+              <p name="porcao-500-serve" class="text-[10px] text-neutral-400">2 pessoas</p>
+            </button>
+            <button name="porcao-750" onclick="selecionarPorcao(this, 750)" class="porcao-btn cursor-pointer rounded-xl px-3 py-2 text-center">
+              <p name="porcao-750-label" class="text-xs font-semibold text-neutral-700">750g</p>
+              <p name="porcao-750-serve" class="text-[10px] text-neutral-400">3 pessoas</p>
+            </button>
+            <button name="porcao-1000" onclick="selecionarPorcao(this, 1000)" class="porcao-btn cursor-pointer rounded-xl px-3 py-2 text-center">
+              <p name="porcao-1000-label" class="text-xs font-semibold text-neutral-700">1kg</p>
+              <p name="porcao-1000-serve" class="text-[10px] text-neutral-400">4 pessoas</p>
+            </button>
+            <button name="porcao-1500" onclick="selecionarPorcao(this, 1500)" class="porcao-btn cursor-pointer rounded-xl px-3 py-2 text-center">
+              <p name="porcao-1500-label" class="text-xs font-semibold text-neutral-700">1,5kg</p>
+              <p name="porcao-1500-serve" class="text-[10px] text-neutral-400">6 pessoas</p>
+            </button>
+          </div>
+        </div>
+
+        <!-- CAMPO LIVRE DE GRAMAS com - e + -->
+        <div name="peso-livre" class="space-y-2">
+          <p class="text-xs text-neutral-400">Ou informe o peso desejado</p>
+          <div class="flex items-center gap-2">
+            <button onclick="ajustarPeso(-50)" class="qty-btn cursor-pointer w-10 h-10 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">−</button>
+            <div class="flex-1 relative">
+              <input
+                name="peso-valor"
+                id="pesoValor"
+                type="number"
+                min="100"
+                step="50"
+                value="500"
+                oninput="atualizarPorInput(this)"
+                class="peso-input w-full rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 text-center bg-white pr-10"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">g</span>
+            </div>
+            <button onclick="ajustarPeso(50)" class="qty-btn cursor-pointer w-10 h-10 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">+</button>
+          </div>
+          <p name="peso-minimo-aviso" class="text-xs text-neutral-400">Mínimo: 100g · Incrementos de 50g</p>
+        </div>
+
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- OBSERVAÇÕES -->
+      <div name="secao-observacoes" class="space-y-2">
+        <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+        <textarea name="observacoes-input" rows="2" placeholder="Ex: ponto da carne, corte especial..." class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"></textarea>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREÇO FINAL -->
+      <div name="secao-preco-final" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total estimado</p>
+          <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">R$ 44,95</p>
+        </div>
+        <p id="precoDetalhe" class="text-xs text-neutral-400 text-right">500g × R$ 89,90/kg</p>
+      </div>
+
+      <p name="aviso-peso-real" class="text-xs text-neutral-400">⚠ O valor final será cobrado pelo peso real do produto.</p>
+
+      <button name="botao-carrinho" type="button" onclick="adicionarCarrinho()" class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <span>🛒</span>
+        <span>Adicionar ao carrinho</span>
+        <span id="botaoPreco" class="opacity-60 font-normal">· R$ 44,95</span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    const precoPorKg = 89.90;
+    let pesoGramas = 500;
+
+    function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    function calcTotal() { return (pesoGramas / 1000) * precoPorKg; }
+
+    function atualizarPreco() {
+      const total = calcTotal();
+      document.getElementById('precoFinal').textContent = fmt(total);
+      document.getElementById('precoDetalhe').textContent =
+        `${pesoGramas >= 1000 ? (pesoGramas/1000).toLocaleString('pt-BR') + 'kg' : pesoGramas + 'g'} × ${fmt(precoPorKg)}/kg`;
+      document.getElementById('botaoPreco').textContent = `· ${fmt(total)}`;
+      document.getElementById('pesoValor').value = pesoGramas;
+
+      // sincroniza porções
+      document.querySelectorAll('.porcao-btn').forEach(b => {
+        const val = parseInt(b.getAttribute('onclick').match(/\d+/)[0]);
+        b.classList.toggle('ativo', val === pesoGramas);
+      });
+    }
+
+    function selecionarPorcao(btn, gramas) {
+      pesoGramas = gramas;
+      atualizarPreco();
+    }
+
+    function ajustarPeso(delta) {
+      pesoGramas = Math.max(100, pesoGramas + delta);
+      atualizarPreco();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 100) {
+        pesoGramas = val;
+        atualizarPreco();
+      }
+    }
+
+    function adicionarCarrinho() {
+      alert(`✓ Adicionado!\n${pesoGramas}g de Picanha\nEstimado: ${fmt(calcTotal())}`);
+    }
+
+    atualizarPreco();
+  </script>
+
+</body>
+</html>

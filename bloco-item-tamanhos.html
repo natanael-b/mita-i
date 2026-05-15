@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item com Tamanhos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-item-tamanhos" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Item" alt="Foto do item" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho-item">
+        <h1 name="item-nome" class="text-xl font-semibold text-neutral-800 leading-snug">Refrigerante</h1>
+        <p name="item-subtitulo" class="text-sm text-neutral-400 mt-0.5">Coca-Cola, Guaraná ou Sprite</p>
+      </div>
+
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed">
+        <p name="item-descricao-paragrafo-1">Geladinho e com gelo. Escolha o tamanho ideal para você. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong>.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- TAMANHOS -->
+      <div name="secao-tamanhos" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Tamanho</p>
+
+        <div name="grade-tamanhos" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+
+          <button name="tamanho-p" onclick="selecionarTamanho(this, 5.90, 'P', '250ml')" class="tamanho-card cursor-pointer rounded-xl p-3 text-center space-y-1">
+            <p name="tamanho-p-sigla" class="text-2xl font-semibold text-neutral-700">P</p>
+            <p name="tamanho-p-ml" class="text-xs text-neutral-400">250ml</p>
+            <p name="tamanho-p-preco" class="text-sm font-semibold text-neutral-800">R$ 5,90</p>
+          </button>
+
+          <button name="tamanho-m" onclick="selecionarTamanho(this, 8.90, 'M', '500ml')" class="tamanho-card selecionado cursor-pointer rounded-xl p-3 text-center space-y-1">
+            <p name="tamanho-m-sigla" class="text-2xl font-semibold text-neutral-700">M</p>
+            <p name="tamanho-m-ml" class="text-xs text-neutral-400">500ml</p>
+            <p name="tamanho-m-preco" class="text-sm font-semibold text-neutral-800">R$ 8,90</p>
+          </button>
+
+          <button name="tamanho-g" onclick="selecionarTamanho(this, 12.90, 'G', '1L')" class="tamanho-card cursor-pointer rounded-xl p-3 text-center space-y-1">
+            <p name="tamanho-g-sigla" class="text-2xl font-semibold text-neutral-700">G</p>
+            <p name="tamanho-g-ml" class="text-xs text-neutral-400">1L</p>
+            <p name="tamanho-g-preco" class="text-sm font-semibold text-neutral-800">R$ 12,90</p>
+          </button>
+
+          <button name="tamanho-gg" onclick="selecionarTamanho(this, 18.90, 'GG', '2L')" class="tamanho-card cursor-pointer rounded-xl p-3 text-center space-y-1">
+            <p name="tamanho-gg-sigla" class="text-2xl font-semibold text-neutral-700">GG</p>
+            <p name="tamanho-gg-ml" class="text-xs text-neutral-400">2L</p>
+            <p name="tamanho-gg-preco" class="text-sm font-semibold text-neutral-800">R$ 18,90</p>
+          </button>
+
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- QUANTIDADE -->
+      <div name="secao-quantidade" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex gap-1.5">
+            <button onclick="selecionarPreset(this, 1)" class="qty-preset ativo cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">1</button>
+            <button onclick="selecionarPreset(this, 2)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">2</button>
+            <button onclick="selecionarPreset(this, 3)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">3</button>
+            <button onclick="selecionarPreset(this, 4)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">4</button>
+            <button onclick="selecionarPreset(this, 5)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">5</button>
+          </div>
+          <span class="text-neutral-200 text-sm select-none">|</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="ajustar(-1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">−</button>
+            <input name="quantidade-valor" id="quantidadeValor" type="number" min="1" value="1" oninput="atualizarPorInput(this)" class="w-12 h-9 text-center text-sm font-medium text-neutral-800 border border-[#E8E8E8] rounded-xl focus:outline-none focus:border-neutral-400 bg-white" />
+            <button onclick="ajustar(1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">+</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- OBSERVAÇÕES -->
+      <div name="secao-observacoes" class="space-y-2">
+        <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+        <textarea name="observacoes-input" rows="2" placeholder="Ex: sem gelo, limão à parte..." class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"></textarea>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREÇO FINAL -->
+      <div name="secao-preco-final" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total</p>
+          <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">R$ 8,90</p>
+        </div>
+        <p id="precoDetalhe" class="text-xs text-neutral-400 text-right"></p>
+      </div>
+
+      <button name="botao-carrinho" type="button" onclick="adicionarCarrinho()" class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <span>🛒</span>
+        <span>Adicionar ao carrinho</span>
+        <span id="botaoPreco" class="opacity-60 font-normal">· R$ 8,90</span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    let precoUnitario = 8.90;
+    let tamanhoAtual = 'M';
+    let quantidade = 1;
+
+    function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    function selecionarTamanho(btn, preco, sigla, volume) {
+      document.querySelectorAll('.tamanho-card').forEach(c => c.classList.remove('selecionado'));
+      btn.classList.add('selecionado');
+      precoUnitario = preco;
+      tamanhoAtual = sigla;
+      atualizarPreco();
+    }
+
+    function atualizarPreco() {
+      const total = precoUnitario * quantidade;
+      document.getElementById('precoFinal').textContent = fmt(total);
+      document.getElementById('precoDetalhe').textContent = quantidade > 1 ? `${quantidade} × ${fmt(precoUnitario)}` : '';
+      document.getElementById('botaoPreco').textContent = `· ${fmt(total)}`;
+    }
+
+    function selecionarPreset(btn, val) {
+      quantidade = val;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === val));
+      document.getElementById('quantidadeValor').value = val;
+      atualizarPreco();
+    }
+
+    function ajustar(delta) {
+      quantidade = Math.max(1, quantidade + delta);
+      document.getElementById('quantidadeValor').value = quantidade;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === quantidade));
+      atualizarPreco();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 1) { quantidade = val; atualizarPreco(); }
+    }
+
+    function adicionarCarrinho() {
+      alert(`✓ Adicionado!\n${tamanhoAtual} × ${quantidade}\nTotal: ${fmt(precoUnitario * quantidade)}`);
+    }
+  </script>
+
+</body>
+</html>

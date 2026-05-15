@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Checkout Endereço</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-checkout-endereco" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo" alt="Imagem de capa" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho">
+        <h1 name="titulo" class="text-xl font-semibold text-neutral-800">Endereço de entrega</h1>
+        <p name="subtitulo" class="text-sm text-neutral-400 mt-0.5">Onde devemos entregar seu pedido?</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- TIPO DE ENTREGA -->
+      <div name="secao-tipo-entrega" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Tipo de entrega</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button name="tipo-entrega" onclick="selecionarTipo(this, 'entrega')" class="tipo-btn ativo cursor-pointer rounded-xl px-4 py-3 text-left space-y-0.5">
+            <p class="text-sm font-semibold text-neutral-800">🛵 Entrega</p>
+            <p name="tipo-entrega-detalhe" class="text-xs text-neutral-400">Receba em casa</p>
+          </button>
+          <button name="tipo-retirada" onclick="selecionarTipo(this, 'retirada')" class="tipo-btn cursor-pointer rounded-xl px-4 py-3 text-left space-y-0.5">
+            <p class="text-sm font-semibold text-neutral-800">🏪 Retirada</p>
+            <p name="tipo-retirada-detalhe" class="text-xs text-neutral-400">Buscar no local</p>
+          </button>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- ENDEREÇOS SALVOS -->
+      <div name="secao-enderecos-salvos" id="secaoEnderecosSalvos" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Endereços salvos</p>
+        <div class="space-y-2">
+
+          <label name="endereco-salvo-1" for="end-salvo-1" class="endereco-salvo selecionado cursor-pointer flex items-start gap-3 rounded-xl px-4 py-3">
+            <input id="end-salvo-1" type="radio" name="endereco-salvo-radio" class="hidden" checked onchange="selecionarEnderecoSalvo(this)" />
+            <div class="w-4 h-4 rounded-full border-2 border-neutral-800 shrink-0 mt-0.5 flex items-center justify-center">
+              <div class="w-2 h-2 rounded-full bg-neutral-800"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p name="endereco-salvo-1-label" class="text-sm font-semibold text-neutral-800">Casa</p>
+              <p name="endereco-salvo-1-endereco" class="text-xs text-neutral-500 mt-0.5">Rua das Flores, 123 – Apto 45, Centro, Cidade – UF</p>
+            </div>
+          </label>
+
+          <label name="endereco-salvo-2" for="end-salvo-2" class="endereco-salvo cursor-pointer flex items-start gap-3 rounded-xl px-4 py-3">
+            <input id="end-salvo-2" type="radio" name="endereco-salvo-radio" class="hidden" onchange="selecionarEnderecoSalvo(this)" />
+            <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 mt-0.5 flex items-center justify-center">
+              <div class="w-2 h-2 rounded-full bg-neutral-800 hidden"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p name="endereco-salvo-2-label" class="text-sm font-semibold text-neutral-800">Trabalho</p>
+              <p name="endereco-salvo-2-endereco" class="text-xs text-neutral-500 mt-0.5">Av. Paulista, 1000 – Sala 12, Bela Vista, São Paulo – SP</p>
+            </div>
+          </label>
+
+          <button name="btn-novo-endereco" onclick="toggleNovoEndereco()" class="cursor-pointer w-full border border-dashed border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50 rounded-xl px-4 py-3 text-sm text-neutral-400 hover:text-neutral-600 transition-colors text-center">
+            + Usar outro endereço
+          </button>
+
+        </div>
+      </div>
+
+      <!-- NOVO ENDEREÇO -->
+      <div name="secao-novo-endereco" id="secaoNovoEndereco" class="space-y-4 hidden">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Novo endereço</p>
+
+        <!-- CEP -->
+        <div name="campo-cep" class="space-y-1.5">
+          <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">CEP</label>
+          <div class="flex gap-2">
+            <input name="campo-cep-input" id="cepInput" type="text" maxlength="9" placeholder="00000-000"
+              oninput="mascaraCep(this)"
+              class="field-input flex-1 rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+            <button onclick="buscarCep()" class="cursor-pointer shrink-0 border border-neutral-200 hover:bg-neutral-50 text-neutral-600 text-xs font-medium px-4 py-2.5 rounded-xl transition-colors">Buscar</button>
+          </div>
+        </div>
+
+        <!-- LOGRADOURO + NÚMERO -->
+        <div class="grid grid-cols-3 gap-3">
+          <div name="campo-logradouro" class="col-span-2 space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Rua / Avenida</label>
+            <input name="campo-logradouro-input" type="text" placeholder="Rua das Flores"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+          </div>
+          <div name="campo-numero" class="space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Número</label>
+            <input name="campo-numero-input" type="text" placeholder="123"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+          </div>
+        </div>
+
+        <!-- COMPLEMENTO + BAIRRO -->
+        <div class="grid grid-cols-2 gap-3">
+          <div name="campo-complemento" class="space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Complemento</label>
+            <input name="campo-complemento-input" type="text" placeholder="Apto, Bloco..."
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+          </div>
+          <div name="campo-bairro" class="space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Bairro</label>
+            <input name="campo-bairro-input" type="text" placeholder="Centro"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+          </div>
+        </div>
+
+        <!-- CIDADE + ESTADO -->
+        <div class="grid grid-cols-3 gap-3">
+          <div name="campo-cidade" class="col-span-2 space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Cidade</label>
+            <input name="campo-cidade-input" type="text" placeholder="São Paulo"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+          </div>
+          <div name="campo-estado" class="space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">UF</label>
+            <input name="campo-estado-input" type="text" maxlength="2" placeholder="SP"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white uppercase" />
+          </div>
+        </div>
+
+        <!-- PONTO DE REFERÊNCIA -->
+        <div name="campo-referencia" class="space-y-1.5">
+          <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Ponto de referência</label>
+          <input name="campo-referencia-input" type="text" placeholder="Ex: próximo ao mercado, portão azul..."
+            class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+        </div>
+
+        <!-- SALVAR ENDEREÇO -->
+        <label name="campo-salvar-endereco" for="salvarEndereco" class="flex items-center gap-3 cursor-pointer">
+          <input name="campo-salvar-endereco-check" id="salvarEndereco" type="checkbox"
+            class="w-4 h-4 rounded border-neutral-300 cursor-pointer accent-neutral-800" />
+          <span class="text-sm text-neutral-600">Salvar este endereço para próximas compras</span>
+        </label>
+
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREVISÃO DE ENTREGA -->
+      <div name="secao-previsao" id="secaoPrevisao" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Previsão de entrega</p>
+          <p name="previsao-tempo" class="text-sm font-semibold text-neutral-800 mt-0.5">30 – 45 minutos</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Taxa de entrega</p>
+          <p name="taxa-entrega" class="text-sm font-semibold text-neutral-800 mt-0.5">R$ 8,90</p>
+        </div>
+      </div>
+
+      <!-- BOTÃO CONTINUAR -->
+      <button name="botao-continuar" type="button" onclick="continuarPagamento()"
+        class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <span name="botao-continuar-texto">Continuar para pagamento →</span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    let tipoAtual = 'entrega';
+    let novoEnderecoAberto = false;
+
+    function selecionarTipo(btn, tipo) {
+      tipoAtual = tipo;
+      document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+
+      const secaoSalvos  = document.getElementById('secaoEnderecosSalvos');
+      const secaoPrevisao = document.getElementById('secaoPrevisao');
+
+      if (tipo === 'retirada') {
+        secaoSalvos.classList.add('hidden');
+        document.getElementById('secaoNovoEndereco').classList.add('hidden');
+        secaoPrevisao.querySelector('[name="previsao-tempo"]').textContent = 'Pronto em 20 – 30 min';
+        secaoPrevisao.querySelector('[name="taxa-entrega"]').textContent = 'Grátis';
+      } else {
+        secaoSalvos.classList.remove('hidden');
+        secaoPrevisao.querySelector('[name="previsao-tempo"]').textContent = '30 – 45 minutos';
+        secaoPrevisao.querySelector('[name="taxa-entrega"]').textContent = 'R$ 8,90';
+      }
+    }
+
+    function selecionarEnderecoSalvo(radio) {
+      document.querySelectorAll('.endereco-salvo').forEach(l => {
+        l.classList.remove('selecionado');
+        l.querySelector('.w-2').classList.add('hidden');
+        l.querySelector('.w-4').classList.remove('border-neutral-800');
+        l.querySelector('.w-4').classList.add('border-neutral-300');
+      });
+      const label = radio.closest('label');
+      label.classList.add('selecionado');
+      label.querySelector('.w-2').classList.remove('hidden');
+      label.querySelector('.w-4').classList.add('border-neutral-800');
+      label.querySelector('.w-4').classList.remove('border-neutral-300');
+
+      document.getElementById('secaoNovoEndereco').classList.add('hidden');
+      novoEnderecoAberto = false;
+    }
+
+    function toggleNovoEndereco() {
+      novoEnderecoAberto = !novoEnderecoAberto;
+      document.getElementById('secaoNovoEndereco').classList.toggle('hidden', !novoEnderecoAberto);
+
+      // desmarca endereços salvos
+      if (novoEnderecoAberto) {
+        document.querySelectorAll('.endereco-salvo').forEach(l => {
+          l.classList.remove('selecionado');
+          l.querySelector('.w-2').classList.add('hidden');
+          l.querySelector('.w-4').classList.remove('border-neutral-800');
+          l.querySelector('.w-4').classList.add('border-neutral-300');
+        });
+      }
+    }
+
+    function mascaraCep(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 8);
+      if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+      input.value = v;
+    }
+
+    function buscarCep() {
+      const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
+      if (cep.length !== 8) return alert('CEP inválido.');
+      // integração real: fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      alert(`Buscando CEP ${cep}...\n(integrar com ViaCEP ou similar)`);
+    }
+
+    function continuarPagamento() {
+      alert('Seguindo para o pagamento!');
+    }
+  </script>
+
+</body>
+</html>

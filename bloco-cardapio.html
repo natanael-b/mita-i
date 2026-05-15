@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Cardápio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- BLOCO CARDÁPIO -->
+  <section name="bloco-cardapio" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo"
+        alt="Imagem de capa"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- CABEÇALHO -->
+      <div name="cabecalho">
+        <h1 name="titulo" class="text-xl font-semibold text-neutral-800 leading-snug">Cardápio</h1>
+        <p name="subtitulo" class="text-sm text-neutral-400 mt-0.5">Confira nossas opções</p>
+      </div>
+
+      <!-- DESCRIÇÃO HTML LIVRE -->
+      <div name="descricao" class="text-sm text-neutral-600 leading-relaxed space-y-2">
+        <p name="descricao-paragrafo-1">
+          Todos os pratos são preparados com ingredientes frescos. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong> com ênfases, listas e links.
+        </p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- LISTA DE ITENS -->
+      <div name="lista-itens" class="space-y-3">
+
+        <!-- ITEM 1 -->
+        <article name="item-1" class="item-card cursor-pointer bg-white rounded-xl overflow-hidden flex items-stretch">
+          <div name="item-1-imagem-wrapper" class="w-24 md:w-32 shrink-0 overflow-hidden bg-[#F0F0F0]">
+            <img
+              name="item-1-imagem"
+              src="https://placehold.co/200x200/DDDDDD/999999?text=Item+1"
+              alt="Item 1"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-1 min-w-0 gap-2">
+            <div class="space-y-0.5">
+              <p name="item-1-nome" class="text-sm font-semibold text-neutral-800 leading-snug">Nome do Item</p>
+              <p name="item-1-descricao" class="text-xs text-neutral-500 leading-relaxed line-clamp-2">Descrição breve dos ingredientes ou detalhes do item oferecido.</p>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1">
+                <p name="item-1-preco" class="text-sm font-semibold text-neutral-800">R$ 24,90</p>
+                <span name="item-1-unidade" class="text-xs text-neutral-400">/unidade</span>
+              </div>
+              <span name="item-1-badge" class="text-[10px] font-medium text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5">Vegano</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- ITEM 2 -->
+        <article name="item-2" class="item-card cursor-pointer bg-white rounded-xl overflow-hidden flex items-stretch">
+          <div name="item-2-imagem-wrapper" class="w-24 md:w-32 shrink-0 overflow-hidden bg-[#F0F0F0]">
+            <img
+              name="item-2-imagem"
+              src="https://placehold.co/200x200/DDDDDD/999999?text=Item+2"
+              alt="Item 2"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-1 min-w-0 gap-2">
+            <div class="space-y-0.5">
+              <p name="item-2-nome" class="text-sm font-semibold text-neutral-800 leading-snug">Nome do Item</p>
+              <p name="item-2-descricao" class="text-xs text-neutral-500 leading-relaxed line-clamp-2">Descrição breve dos ingredientes ou detalhes do item oferecido.</p>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1">
+                <p name="item-2-preco" class="text-sm font-semibold text-neutral-800">R$ 18,50</p>
+                <span name="item-2-unidade" class="text-xs text-neutral-400">/unidade</span>
+              </div>
+              <span name="item-2-badge" class="text-[10px] font-medium text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5">Sem glúten</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- ITEM 3 -->
+        <article name="item-3" class="item-card cursor-pointer bg-white rounded-xl overflow-hidden flex items-stretch">
+          <div name="item-3-imagem-wrapper" class="w-24 md:w-32 shrink-0 overflow-hidden bg-[#F0F0F0]">
+            <img
+              name="item-3-imagem"
+              src="https://placehold.co/200x200/DDDDDD/999999?text=Item+3"
+              alt="Item 3"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-1 min-w-0 gap-2">
+            <div class="space-y-0.5">
+              <p name="item-3-nome" class="text-sm font-semibold text-neutral-800 leading-snug">Nome do Item</p>
+              <p name="item-3-descricao" class="text-xs text-neutral-500 leading-relaxed line-clamp-2">Descrição breve dos ingredientes ou detalhes do item oferecido.</p>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1">
+                <p name="item-3-preco" class="text-sm font-semibold text-neutral-800">R$ 32,00</p>
+                <span name="item-3-unidade" class="text-xs text-neutral-400">/unidade</span>
+              </div>
+              <span name="item-3-badge" class="text-[10px] font-medium text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5">Destaque</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- ITEM 4 -->
+        <article name="item-4" class="item-card cursor-pointer bg-white rounded-xl overflow-hidden flex items-stretch">
+          <div name="item-4-imagem-wrapper" class="w-24 md:w-32 shrink-0 overflow-hidden bg-[#F0F0F0]">
+            <img
+              name="item-4-imagem"
+              src="https://placehold.co/200x200/DDDDDD/999999?text=Item+4"
+              alt="Item 4"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-1 min-w-0 gap-2">
+            <div class="space-y-0.5">
+              <p name="item-4-nome" class="text-sm font-semibold text-neutral-800 leading-snug">Nome do Item</p>
+              <p name="item-4-descricao" class="text-xs text-neutral-500 leading-relaxed line-clamp-2">Descrição breve dos ingredientes ou detalhes do item oferecido.</p>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1">
+                <p name="item-4-preco" class="text-sm font-semibold text-neutral-800">R$ 15,00</p>
+                <span name="item-4-unidade" class="text-xs text-neutral-400">/unidade</span>
+              </div>
+              <span name="item-4-badge" class="text-[10px] font-medium text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5">Novo</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- ITEM 5 -->
+        <article name="item-5" class="item-card cursor-pointer bg-white rounded-xl overflow-hidden flex items-stretch">
+          <div name="item-5-imagem-wrapper" class="w-24 md:w-32 shrink-0 overflow-hidden bg-[#F0F0F0]">
+            <img
+              name="item-5-imagem"
+              src="https://placehold.co/200x200/DDDDDD/999999?text=Item+5"
+              alt="Item 5"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-1 min-w-0 gap-2">
+            <div class="space-y-0.5">
+              <p name="item-5-nome" class="text-sm font-semibold text-neutral-800 leading-snug">Nome do Item</p>
+              <p name="item-5-descricao" class="text-xs text-neutral-500 leading-relaxed line-clamp-2">Descrição breve dos ingredientes ou detalhes do item oferecido.</p>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-baseline gap-1">
+                <p name="item-5-preco" class="text-sm font-semibold text-neutral-800">R$ 27,90</p>
+                <span name="item-5-unidade" class="text-xs text-neutral-400">/unidade</span>
+              </div>
+              <span name="item-5-badge" class="text-[10px] font-medium text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5">Popular</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+      <!-- FIM DOS ITENS -->
+
+    </div>
+  </section>
+
+</body>
+</html>

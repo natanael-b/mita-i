@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item com Adicionais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-item-adicionais" data-max-adicionais="3" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Item" alt="Foto do item" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho-item" class="flex items-start justify-between gap-4">
+        <h1 name="item-nome" class="text-xl font-semibold text-neutral-800 leading-snug">X-Burguer Clássico</h1>
+        <div class="text-right shrink-0">
+          <p name="item-preco-base" class="text-xl font-semibold text-neutral-800">R$ 28,90</p>
+          <p name="item-unidade" class="text-xs text-neutral-400">/unidade</p>
+        </div>
+      </div>
+
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed">
+        <p name="item-descricao-paragrafo-1">Pão brioche, blend 180g, queijo cheddar, alface, tomate e maionese especial. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong>.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- ADICIONAIS -->
+      <div name="secao-adicionais" class="space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Adicionais</p>
+          <p id="contadorAdicionais" class="text-xs text-neutral-400">0 de 3 selecionados</p>
+        </div>
+
+        <div name="lista-adicionais" class="space-y-2">
+
+          <label name="adicional-1" for="add-1" class="adicional-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="adicional-1-check" id="add-1" type="checkbox" class="custom-check" data-preco="3" onchange="atualizarAdicionais(this)" />
+            <div class="flex-1 min-w-0">
+              <p name="adicional-1-nome" class="text-sm font-medium text-neutral-800">Bacon Crocante</p>
+              <p name="adicional-1-detalhe" class="text-xs text-neutral-400">Tiras de bacon grelhadas</p>
+            </div>
+            <p name="adicional-1-preco" class="text-sm font-semibold text-neutral-600 shrink-0">+ R$ 3,00</p>
+          </label>
+
+          <label name="adicional-2" for="add-2" class="adicional-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="adicional-2-check" id="add-2" type="checkbox" class="custom-check" data-preco="2" onchange="atualizarAdicionais(this)" />
+            <div class="flex-1 min-w-0">
+              <p name="adicional-2-nome" class="text-sm font-medium text-neutral-800">Queijo Extra</p>
+              <p name="adicional-2-detalhe" class="text-xs text-neutral-400">Fatia de cheddar cremoso</p>
+            </div>
+            <p name="adicional-2-preco" class="text-sm font-semibold text-neutral-600 shrink-0">+ R$ 2,00</p>
+          </label>
+
+          <label name="adicional-3" for="add-3" class="adicional-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="adicional-3-check" id="add-3" type="checkbox" class="custom-check" data-preco="4" onchange="atualizarAdicionais(this)" />
+            <div class="flex-1 min-w-0">
+              <p name="adicional-3-nome" class="text-sm font-medium text-neutral-800">Ovo Frito</p>
+              <p name="adicional-3-detalhe" class="text-xs text-neutral-400">Ovo caipira frito na manteiga</p>
+            </div>
+            <p name="adicional-3-preco" class="text-sm font-semibold text-neutral-600 shrink-0">+ R$ 4,00</p>
+          </label>
+
+          <label name="adicional-4" for="add-4" class="adicional-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="adicional-4-check" id="add-4" type="checkbox" class="custom-check" data-preco="2.5" onchange="atualizarAdicionais(this)" />
+            <div class="flex-1 min-w-0">
+              <p name="adicional-4-nome" class="text-sm font-medium text-neutral-800">Jalapeño</p>
+              <p name="adicional-4-detalhe" class="text-xs text-neutral-400">Rodelas de jalapeño em conserva</p>
+            </div>
+            <p name="adicional-4-preco" class="text-sm font-semibold text-neutral-600 shrink-0">+ R$ 2,50</p>
+          </label>
+
+          <label name="adicional-5" for="add-5" class="adicional-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="adicional-5-check" id="add-5" type="checkbox" class="custom-check" data-preco="5" onchange="atualizarAdicionais(this)" />
+            <div class="flex-1 min-w-0">
+              <p name="adicional-5-nome" class="text-sm font-medium text-neutral-800">Blend Duplo</p>
+              <p name="adicional-5-detalhe" class="text-xs text-neutral-400">Mais 180g de carne no blend</p>
+            </div>
+            <p name="adicional-5-preco" class="text-sm font-semibold text-neutral-600 shrink-0">+ R$ 5,00</p>
+          </label>
+
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- QUANTIDADE -->
+      <div name="secao-quantidade" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex gap-1.5">
+            <button onclick="selecionarPreset(this, 1)" class="qty-preset ativo cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">1</button>
+            <button onclick="selecionarPreset(this, 2)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">2</button>
+            <button onclick="selecionarPreset(this, 3)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">3</button>
+            <button onclick="selecionarPreset(this, 4)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">4</button>
+            <button onclick="selecionarPreset(this, 5)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">5</button>
+          </div>
+          <span class="text-neutral-200 text-sm select-none">|</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="ajustar(-1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">−</button>
+            <input name="quantidade-valor" id="quantidadeValor" type="number" min="1" value="1" oninput="atualizarPorInput(this)" class="w-12 h-9 text-center text-sm font-medium text-neutral-800 border border-[#E8E8E8] rounded-xl focus:outline-none focus:border-neutral-400 bg-white" />
+            <button onclick="ajustar(1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">+</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- OBSERVAÇÕES -->
+      <div name="secao-observacoes" class="space-y-2">
+        <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+        <textarea name="observacoes-input" rows="2" placeholder="Ex: sem cebola, maionese à parte..." class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"></textarea>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREÇO FINAL -->
+      <div name="secao-preco-final" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total</p>
+          <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">R$ 28,90</p>
+        </div>
+        <p id="precoDetalhe" class="text-xs text-neutral-400 text-right"></p>
+      </div>
+
+      <button name="botao-carrinho" type="button" onclick="adicionarCarrinho()" class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <span>🛒</span>
+        <span>Adicionar ao carrinho</span>
+        <span id="botaoPreco" class="opacity-60 font-normal">· R$ 28,90</span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    const precoBase = 28.90;
+    let quantidade = 1;
+    let totalAdicionais = 0;
+
+    function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    const maxAdicionais = parseInt(document.querySelector('[name="bloco-item-adicionais"]').getAttribute('data-max-adicionais')) || Infinity;
+
+    function atualizarAdicionais(check) {
+      const selecionados = [...document.querySelectorAll('.custom-check:checked')];
+
+      if (check.checked && selecionados.length > maxAdicionais) {
+        check.checked = false;
+        return;
+      }
+
+      check.closest('label').classList.toggle('selecionado', check.checked);
+
+      const total = [...document.querySelectorAll('.custom-check:checked')].length;
+
+      // desabilita não selecionados se atingiu o limite
+      document.querySelectorAll('.custom-check').forEach(c => {
+        const label = c.closest('label');
+        if (!c.checked && total >= maxAdicionais) {
+          c.disabled = true;
+          label.classList.add('opacity-40', 'cursor-not-allowed');
+          label.classList.remove('cursor-pointer');
+        } else {
+          c.disabled = false;
+          label.classList.remove('opacity-40', 'cursor-not-allowed');
+          label.classList.add('cursor-pointer');
+        }
+      });
+
+      document.getElementById('contadorAdicionais').textContent =
+        `${total} de ${maxAdicionais === Infinity ? '∞' : maxAdicionais} selecionados`;
+
+      totalAdicionais = [...document.querySelectorAll('.custom-check:checked')]
+        .reduce((a, c) => a + parseFloat(c.getAttribute('data-preco')), 0);
+      atualizarPreco();
+    }
+
+    function calcUnit() { return precoBase + totalAdicionais; }
+
+    function atualizarPreco() {
+      const unit = calcUnit();
+      const total = unit * quantidade;
+      document.getElementById('precoFinal').textContent = fmt(total);
+      document.getElementById('precoDetalhe').textContent = quantidade > 1 ? `${quantidade} × ${fmt(unit)}` : '';
+      document.getElementById('botaoPreco').textContent = `· ${fmt(total)}`;
+    }
+
+    function selecionarPreset(btn, val) {
+      quantidade = val;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === val));
+      document.getElementById('quantidadeValor').value = val;
+      atualizarPreco();
+    }
+
+    function ajustar(delta) {
+      quantidade = Math.max(1, quantidade + delta);
+      document.getElementById('quantidadeValor').value = quantidade;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === quantidade));
+      atualizarPreco();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 1) { quantidade = val; atualizarPreco(); }
+    }
+
+    function adicionarCarrinho() {
+      alert(`✓ Adicionado!\nTotal: ${fmt(calcUnit() * quantidade)}`);
+    }
+  </script>
+
+</body>
+</html>

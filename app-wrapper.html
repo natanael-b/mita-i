@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – App Wrapper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="global.css">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+
+    /* ── HEADER ────────────────────────────────────────────────────────────── */
+    #app-header {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(255,255,255,0.92);
+      border-bottom: 1px solid #EBEBEB;
+    }
+
+    .header-btn {
+      border: 1px solid #E8E8E8;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .header-btn:hover { background: #F7F7F7; border-color: #D0D0D0; }
+
+    /* ── SLIDE-UP ──────────────────────────────────────────────────────────── */
+    #slideup-overlay {
+      background: rgba(0,0,0,0);
+      transition: background 0.3s ease;
+      pointer-events: none;
+    }
+    #slideup-overlay.visivel {
+      background: rgba(0,0,0,0.4);
+      pointer-events: all;
+    }
+
+    #slideup-panel {
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    #slideup-panel.visivel { transform: translateY(0); }
+
+    /* ── MODAL ─────────────────────────────────────────────────────────────── */
+    #modal-overlay {
+      background: rgba(0,0,0,0);
+      transition: background 0.25s ease;
+      pointer-events: none;
+    }
+    #modal-overlay.visivel {
+      background: rgba(0,0,0,0.5);
+      pointer-events: all;
+    }
+
+    #modal-panel {
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      max-height: 85vh;
+      overflow-y: auto;
+      max-width: 560px;
+      width: calc(100% - 32px);
+    }
+    #modal-panel.visivel { transform: scale(1); opacity: 1; }
+
+    /* ── DRAG HANDLE ───────────────────────────────────────────────────────── */
+    .drag-handle {
+      width: 36px; height: 4px;
+      background: #E0E0E0;
+      border-radius: 2px;
+    }
+
+    /* ── SCROLL SUAVE NO CONTEÚDO ──────────────────────────────────────────── */
+    #app-content { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="bg-[#F4F4F4] h-full">
+
+  <!-- ── CABEÇALHO FIXO ────────────────────────────────────────────────────── -->
+  <header id="app-header" name="app-header" class="fixed top-0 left-0 right-0 z-40 px-4 md:px-8 h-14 flex items-center justify-between gap-3">
+
+    <!-- ESQUERDA: voltar -->
+    <div class="flex items-center gap-2">
+      <button id="backButton" name="backButton"
+        class="header-btn cursor-pointer flex items-center gap-2 rounded-xl px-3 h-9 text-neutral-600">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
+        </svg>
+        <span name="backButton-label" class="hidden md:inline text-xs font-medium">Voltar</span>
+      </button>
+
+    </div>
+
+    <!-- TÍTULO CENTRAL (opcional) -->
+    <p name="app-titulo" id="appTitulo" class="text-sm font-semibold text-neutral-700 truncate text-center flex-1"></p>
+
+    <!-- DIREITA: configurações + logout -->
+    <div class="flex items-center gap-2">
+      <button id="settingsButton" name="settingsButton"
+        class="header-btn cursor-pointer flex items-center gap-2 rounded-xl px-3 h-9 text-neutral-600">
+        <!-- ícone engrenagem -->
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        </svg>
+        <span name="settingsButton-label" class="hidden md:inline text-xs font-medium">Configurações</span>
+      </button>
+
+      <button id="logoutButton" name="logoutButton"
+        class="header-btn cursor-pointer flex items-center gap-2 rounded-xl px-3 h-9 text-neutral-600">
+        <!-- ícone sair -->
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z" clip-rule="evenodd" />
+          <path fill-rule="evenodd" d="M6 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H6.75A.75.75 0 016 10z" clip-rule="evenodd" />
+        </svg>
+        <span name="logoutButton-label" class="hidden md:inline text-xs font-medium">Sair</span>
+      </button>
+    </div>
+
+  </header>
+
+  <section class="bg-[#F4F4F4] flex justify-center p-4 md:p-8 mt-9">
+  <!-- ── CONTEÚDO PRINCIPAL ─────────────────────────────────────────────────── -->
+  <main id="appContent" name="app-content" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+
+
+    <!-- ZONA DE APPEND ───────────────────────────────────────────────────────── -->
+    <div name="app-append-zone" id="appAppendZone" class="p-6 md:p-8 space-y-6">
+
+    </div>
+
+  </main>
+  </section>
+
+  <!-- ── SLIDE-UP ──────────────────────────────────────────────────────────── -->
+  <div id="slideup-overlay" name="slideup-overlay"
+    class="fixed inset-0 z-50 flex items-end"
+    onclick="closeSlideUp()">
+
+    <div id="slideup-panel" name="slideup-panel"
+      class="w-full bg-white rounded-t-3xl shadow-2xl"
+      onclick="event.stopPropagation()">
+
+      <!-- handle + fechar -->
+      <div class="flex flex-col items-center pt-3 pb-1 px-4">
+        <div class="drag-handle mb-3"></div>
+        <div class="flex items-center justify-between w-full">
+          <p name="slideup-titulo" id="slideupTitulo" class="text-sm font-semibold text-neutral-800"></p>
+          <button onclick="closeSlideUp()"
+            class="cursor-pointer w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-lg leading-none transition-colors">×</button>
+        </div>
+      </div>
+
+      <div name="slideup-conteudo" id="slideupConteudo" class="px-4 pb-6 pt-2"></div>
+    </div>
+  </div>
+
+  <!-- ── MODAL ─────────────────────────────────────────────────────────────── -->
+  <div id="modal-overlay" name="modal-overlay"
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    onclick="closeModal()">
+
+    <div id="modal-panel" name="modal-panel"
+      class="bg-white rounded-2xl shadow-2xl w-full"
+      onclick="event.stopPropagation()">
+
+      <!-- fechar -->
+      <div class="flex items-center justify-between px-5 pt-4 pb-2">
+        <p name="modal-titulo" id="modalTitulo" class="text-sm font-semibold text-neutral-800"></p>
+        <button onclick="closeModal()"
+          class="cursor-pointer w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center text-neutral-500 text-lg leading-none transition-colors">×</button>
+      </div>
+
+      <div name="modal-conteudo" id="modalConteudo" class="px-5 pb-5 pt-2"></div>
+    </div>
+  </div>
+
+  <script>
+    // ─── SLIDE-UP ─────────────────────────────────────────────────────────────
+    /**
+     * openSlideUp(elemento, titulo?)
+     * Exibe um HTMLElement deslizando de baixo para cima.
+     */
+    function openSlideUp(el, titulo = '') {
+      document.getElementById('slideupConteudo').innerHTML = '';
+      document.getElementById('slideupConteudo').appendChild(el.cloneNode ? el.cloneNode(true) : el);
+      document.getElementById('slideupTitulo').textContent = titulo;
+
+      const overlay = document.getElementById('slideup-overlay');
+      const panel   = document.getElementById('slideup-panel');
+
+      overlay.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        overlay.classList.add('visivel');
+        panel.classList.add('visivel');
+      });
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSlideUp() {
+      const overlay = document.getElementById('slideup-overlay');
+      const panel   = document.getElementById('slideup-panel');
+      overlay.classList.remove('visivel');
+      panel.classList.remove('visivel');
+      document.body.style.overflow = '';
+      setTimeout(() => { document.getElementById('slideupConteudo').innerHTML = ''; }, 350);
+    }
+
+    // ─── MODAL ────────────────────────────────────────────────────────────────
+    /**
+     * openModal(elemento, titulo?)
+     * Exibe um HTMLElement como modal centralizado com fundo escurecido.
+     */
+    function openModal(el, titulo = '') {
+      document.getElementById('modalConteudo').innerHTML = '';
+      document.getElementById('modalConteudo').appendChild(el.cloneNode ? el.cloneNode(true) : el);
+      document.getElementById('modalTitulo').textContent = titulo;
+
+      const overlay = document.getElementById('modal-overlay');
+      const panel   = document.getElementById('modal-panel');
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('visivel');
+        panel.classList.add('visivel');
+      });
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      const overlay = document.getElementById('modal-overlay');
+      const panel   = document.getElementById('modal-panel');
+      overlay.classList.remove('visivel');
+      panel.classList.remove('visivel');
+      document.body.style.overflow = '';
+      setTimeout(() => { document.getElementById('modalConteudo').innerHTML = ''; }, 250);
+    }
+
+    // ─── APPEND ───────────────────────────────────────────────────────────────
+    /**
+     * appendBlock(elemento)
+     * Adiciona um HTMLElement ao final da zona de conteúdo principal.
+     */
+    function appendBlock(el) {
+      const zone = document.getElementById('appAppendZone');
+      const wrapper = document.createElement('div');
+      const block = wrapper.appendChild(el.cloneNode ? el.cloneNode(true) : el);
+      zone.appendChild(wrapper);
+      wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      block.classList.add("relative");
+
+
+      return wrapper;
+    }
+
+    // ─── APPEND ───────────────────────────────────────────────────────────────
+    /**
+     * setHeader(header)
+     */
+    function setHeader(header) {
+      if (header.picture) {
+        const pictureWrapper = appContent.appendChild(document.createElement("div"));
+        pictureWrapper.className = "relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]";
+
+        const image = pictureWrapper.appendChild(document.createElement("img"));
+        image.className = "w-full h-full object-cover";
+        image.onerror = () => {
+          image.onerror = null;
+          image.src = "https://placehold.co/700x300/DDDDDD/999999?text=Error+404"
+        }
+        image.src = header.picture;
+      }
+
+      if (header.profile || header.description) {
+        const profileWrapper = appContent.appendChild(document.createElement("div"));
+        profileWrapper.className = "px-6 md:px-8 pb-6 md:pb-8 space-y-6";
+
+        if (header.profile) {
+          // Foto de perfil estilo rede social
+          if (header.profile.social) {
+            const socialWrapper = profileWrapper.appendChild(document.createElement("div"));
+            socialWrapper.className = "-mt-10 flex items-end justify-between gap-4";
+            
+            const pictureWrapper = socialWrapper.appendChild(document.createElement("div"));
+            pictureWrapper.className = "relative w-20 h-20";
+
+            if (header.profile.social.picture) {
+              pictureWrapper.className = "relative z-10 w-20 h-20 rounded-2xl overflow-hidden bg-[#E8E8E8] border-4 border-white shadow-sm shrink-0";
+
+              const image = pictureWrapper.appendChild(document.createElement("img"));
+              image.className = "w-full h-full object-cover";
+              image.onerror = () => {
+                image.onerror = null;
+                image.src = "https://placehold.co/700x300/DDDDDD/999999?text=Error+404"
+              }
+              image.src = header.profile.social.picture;
+            }
+
+            //  Social media pills
+            if (header.profile.social.pills) {
+              const pillWrapper = socialWrapper.appendChild(document.createElement("div"));
+              pillWrapper.className = "flex flex-wrap gap-1.5 justify-end pb-1";
+
+              for (const pill of header.profile.social.pills) {
+                const pillBox = pillWrapper.appendChild(document.createElement("a"));
+                pillBox.className = "social-pill cursor-pointer rounded-full px-3 py-1.5 flex items-center gap-1.5 text-neutral-600";
+                pillBox.setAttribute("target","_blank");
+                pillBox.setAttribute("href",pill.link);
+
+                const icon = pillBox.appendChild(document.createElement("span"));
+                icon.className = "text-xs";
+                icon.appendChild(pill.icon instanceof Node ? pill.icon : document.createTextNode(pill.icon));
+
+                const text = pillBox.appendChild(document.createElement("span"));
+                text.className = "text-xs font-medium";
+                text.textContent = pill.text;
+              }
+            }
+            
+          }
+
+          if (header.profile.headline) {
+            const headlineWrapper = profileWrapper.appendChild(document.createElement("div"));
+            headlineWrapper.className = "flex items-center gap-6";
+
+
+            if (header.profile.headline.picture) {
+              const pictureWrapper = headlineWrapper.appendChild(document.createElement("div"));
+              pictureWrapper.className = "relative z-10 w-20 h-20 rounded-full overflow-hidden bg-[#E8E8E8]  shadow-sm shrink-0";
+
+              const image = pictureWrapper.appendChild(document.createElement("img"));
+              image.className = "w-full h-full object-cover";
+              image.onerror = () => {
+                image.onerror = null;
+                image.src = "https://placehold.co/700x300/DDDDDD/999999?text=Error+404"
+              }
+              image.src = header.profile.picture;
+            }
+
+            const headline = headlineWrapper.appendChild(document.createElement("div"));
+
+            const name = headline.appendChild(document.createElement("h1"));
+            name.className = "text-xl font-semibold text-neutral-800 leading-snug";
+            name.textContent = header.profile.headline.name;
+
+            if (header.profile.headline.line) {
+              const line = headline.appendChild(document.createElement("p"));
+              line.className = "text-sm text-neutral-400";
+              line.textContent = header.profile.headline.line;
+            }
+          }
+        }
+
+        if (header.description) {
+          const description = profileWrapper.appendChild(document.createElement("div"));
+          description.className = "text-sm text-neutral-600 leading-relaxed space-y-2";
+          description.innerHTML = header.description;
+        }
+        
+        appContent.appendChild(document.createElement("hr")).className = "border-neutral-100";
+      }
+
+      appContent.appendChild(document.getElementById("appAppendZone"));
+    }   
+    
+    setHeader({
+      picture: "https://xxx.xxx",
+      profile: {
+        headline: {
+          picture: "https://xxx.xxx",
+          name: "Teste",
+          line: "line xpto",
+          badge: "blah"
+        },
+        social: {
+          /*
+          pills: [
+            {icon: "🔒",text:"@xyz"},
+            {icon: "🎷",text:"#abc"},
+          ]*/
+        }
+      },
+      description: "Olá <b>mundo</b>!"
+    });
+
+
+    // ─── FECHAR COM ESC ───────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeSlideUp();
+        closeModal();
+      }
+    });
+
+  </script>
+
+</body>
+</html>

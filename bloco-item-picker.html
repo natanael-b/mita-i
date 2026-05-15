@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item Tipo Picker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!--
+    CONFIGURAÇÃO DO BLOCO:
+    data-max-selecoes   → quantas características o cliente pode escolher (ex: 2 para meia a meia)
+    data-modo-preco     → "maior" (preço da característica mais cara) ou "composicional" (média ponderada)
+  -->
+  <section
+    name="bloco-item-picker"
+    data-max-selecoes="2"
+    data-modo-preco="maior"
+    class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm"
+  >
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Item"
+        alt="Foto do item"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- NOME -->
+      <div name="cabecalho-item">
+        <h1 name="item-nome" class="text-xl font-semibold text-neutral-800 leading-snug">Pizza Tamanho Médio</h1>
+        <p name="item-subtitulo" class="text-sm text-neutral-400 mt-0.5">Escolha até <span id="labelMaxSelecoes">2</span> sabores</p>
+      </div>
+
+      <!-- DESCRIÇÃO HTML LIVRE -->
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed space-y-2">
+        <p name="item-descricao-paragrafo-1">
+          Massa artesanal fermentada por 48h, molho de tomate San Marzano e queijo muçarela de búfala. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong>.
+        </p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- SELEÇÃO DE CARACTERÍSTICAS -->
+      <div name="secao-caracteristicas" class="space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Sabores</p>
+          <p name="contador-selecoes" id="contadorSelecoes" class="text-xs text-neutral-400">0 de 2 selecionados</p>
+        </div>
+
+        <div name="lista-caracteristicas" class="space-y-2">
+
+          <!-- OPÇÃO 1 -->
+          <label name="opcao-1" for="opcao-1-check" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="opcao-1-check" id="opcao-1-check" type="checkbox" class="custom-check"
+              data-preco="35.90" onchange="atualizarSelecao()" />
+            <div class="flex-1 min-w-0">
+              <p name="opcao-1-nome" class="text-sm font-medium text-neutral-800">Frango com Catupiry</p>
+              <p name="opcao-1-descricao" class="text-xs text-neutral-400 truncate">Frango desfiado, catupiry original e azeitona</p>
+            </div>
+            <p name="opcao-1-preco" class="text-sm font-semibold text-neutral-700 shrink-0">R$ 35,90</p>
+          </label>
+
+          <!-- OPÇÃO 2 -->
+          <label name="opcao-2" for="opcao-2-check" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="opcao-2-check" id="opcao-2-check" type="checkbox" class="custom-check"
+              data-preco="32.90" onchange="atualizarSelecao()" />
+            <div class="flex-1 min-w-0">
+              <p name="opcao-2-nome" class="text-sm font-medium text-neutral-800">Calabresa</p>
+              <p name="opcao-2-descricao" class="text-xs text-neutral-400 truncate">Calabresa fatiada, cebola e orégano</p>
+            </div>
+            <p name="opcao-2-preco" class="text-sm font-semibold text-neutral-700 shrink-0">R$ 32,90</p>
+          </label>
+
+          <!-- OPÇÃO 3 -->
+          <label name="opcao-3" for="opcao-3-check" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="opcao-3-check" id="opcao-3-check" type="checkbox" class="custom-check"
+              data-preco="38.90" onchange="atualizarSelecao()" />
+            <div class="flex-1 min-w-0">
+              <p name="opcao-3-nome" class="text-sm font-medium text-neutral-800">Quatro Queijos</p>
+              <p name="opcao-3-descricao" class="text-xs text-neutral-400 truncate">Muçarela, parmesão, gorgonzola e provolone</p>
+            </div>
+            <p name="opcao-3-preco" class="text-sm font-semibold text-neutral-700 shrink-0">R$ 38,90</p>
+          </label>
+
+          <!-- OPÇÃO 4 -->
+          <label name="opcao-4" for="opcao-4-check" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="opcao-4-check" id="opcao-4-check" type="checkbox" class="custom-check"
+              data-preco="29.90" onchange="atualizarSelecao()" />
+            <div class="flex-1 min-w-0">
+              <p name="opcao-4-nome" class="text-sm font-medium text-neutral-800">Margherita</p>
+              <p name="opcao-4-descricao" class="text-xs text-neutral-400 truncate">Molho, muçarela de búfala e manjericão fresco</p>
+            </div>
+            <p name="opcao-4-preco" class="text-sm font-semibold text-neutral-700 shrink-0">R$ 29,90</p>
+          </label>
+
+          <!-- OPÇÃO 5 -->
+          <label name="opcao-5" for="opcao-5-check" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+            <input name="opcao-5-check" id="opcao-5-check" type="checkbox" class="custom-check"
+              data-preco="34.90" onchange="atualizarSelecao()" />
+            <div class="flex-1 min-w-0">
+              <p name="opcao-5-nome" class="text-sm font-medium text-neutral-800">Portuguesa</p>
+              <p name="opcao-5-descricao" class="text-xs text-neutral-400 truncate">Presunto, ovo, cebola, pimentão e ervilha</p>
+            </div>
+            <p name="opcao-5-preco" class="text-sm font-semibold text-neutral-700 shrink-0">R$ 34,90</p>
+          </label>
+
+        </div>
+
+        <!-- INDICADOR DO MODO DE PREÇO -->
+        <p name="modo-preco-info" id="modoPrecоInfo" class="text-xs text-neutral-400 italic"></p>
+
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- QUANTIDADE -->
+      <div name="secao-quantidade" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div name="quantidade-presets" class="flex gap-1.5">
+            <button name="qty-preset-1" onclick="selecionarPreset(this, 1)" class="qty-preset ativo cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">1</button>
+            <button name="qty-preset-2" onclick="selecionarPreset(this, 2)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">2</button>
+            <button name="qty-preset-3" onclick="selecionarPreset(this, 3)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">3</button>
+            <button name="qty-preset-4" onclick="selecionarPreset(this, 4)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">4</button>
+            <button name="qty-preset-5" onclick="selecionarPreset(this, 5)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">5</button>
+          </div>
+          <span class="text-neutral-200 text-sm select-none">|</span>
+          <div name="quantidade-livre" class="flex items-center gap-1.5">
+            <button name="qty-btn-menos" onclick="ajustar(-1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">−</button>
+            <input
+              name="quantidade-valor"
+              id="quantidadeValor"
+              type="number"
+              min="1"
+              value="1"
+              oninput="atualizarPorInput(this)"
+              class="w-12 h-9 text-center text-sm font-medium text-neutral-800 border border-[#E8E8E8] rounded-xl focus:outline-none focus:border-neutral-400 bg-white"
+            />
+            <button name="qty-btn-mais" onclick="ajustar(1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">+</button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREÇO FINAL -->
+      <div name="secao-preco-final" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total</p>
+          <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">—</p>
+        </div>
+        <p name="item-preco-final-detalhe" id="precoFinalDetalhe" class="text-xs text-neutral-400 text-right">Selecione os sabores</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- OBSERVAÇÕES -->
+      <div name="secao-observacoes" class="space-y-2">
+        <label name="observacoes-label" for="observacoesInput" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+        <textarea
+          name="observacoes-input"
+          id="observacoesInput"
+          rows="3"
+          placeholder="Ex: sem cebola, borda recheada, bem assada..."
+          class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+        ></textarea>
+        <p name="observacoes-dica" class="text-xs text-neutral-400">Pedidos especiais estão sujeitos à disponibilidade.</p>
+      </div>
+
+      <!-- BOTÃO ADICIONAR AO CARRINHO -->
+      <button
+        name="botao-carrinho"
+        id="botaoCarrinho"
+        type="button"
+        onclick="adicionarCarrinho()"
+        disabled
+        class="cursor-pointer w-full bg-neutral-300 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors duration-150 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+      >
+        <span>🛒</span>
+        <span name="botao-carrinho-texto">Adicionar ao carrinho</span>
+        <span name="botao-carrinho-preco" id="botaoPreco" class="opacity-60 font-normal"></span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    // lê configurações do data-attributes
+    const bloco = document.querySelector('[name="bloco-item-picker"]');
+    const maxSelecoes = parseInt(bloco.getAttribute('data-max-selecoes')) || 1;
+    const modoPreco = bloco.getAttribute('data-modo-preco') || 'maior'; // 'maior' | 'composicional'
+
+    let quantidade = 1;
+
+    // ajusta label dinâmico
+    document.getElementById('labelMaxSelecoes').textContent = maxSelecoes;
+
+    function formatar(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function getSelecionadas() {
+      return [...document.querySelectorAll('.custom-check:checked')];
+    }
+
+    function calcularPrecoUnitario(selecionadas) {
+      if (selecionadas.length === 0) return null;
+      const precos = selecionadas.map(c => parseFloat(c.getAttribute('data-preco')));
+
+      if (modoPreco === 'maior') {
+        return Math.max(...precos);
+      } else {
+        // composicional: média ponderada igualitária (cada fatia = 1/n do preço)
+        const soma = precos.reduce((a, b) => a + b, 0);
+        return soma / precos.length;
+      }
+    }
+
+    function atualizarSelecao() {
+      const selecionadas = getSelecionadas();
+      const total = selecionadas.length;
+
+      // atualiza contador
+      document.getElementById('contadorSelecoes').textContent = `${total} de ${maxSelecoes} selecionados`;
+
+      // desabilita checkboxes não selecionados se atingiu o máximo
+      document.querySelectorAll('.custom-check').forEach(c => {
+        const label = c.closest('label');
+        if (!c.checked && total >= maxSelecoes) {
+          c.disabled = true;
+          label.classList.add('desabilitada');
+          label.classList.remove('opcao-item');
+        } else {
+          c.disabled = false;
+          label.classList.remove('desabilitada');
+          if (!label.classList.contains('opcao-item')) label.classList.add('opcao-item');
+        }
+        label.classList.toggle('selecionada', c.checked);
+      });
+
+      // info do modo
+      const infoEl = document.getElementById('modoPrecоInfo');
+      if (total > 0) {
+        if (modoPreco === 'maior') {
+          infoEl.textContent = 'Preço calculado pelo sabor de maior valor.';
+        } else {
+          infoEl.textContent = 'Preço calculado pela média proporcional dos sabores.';
+        }
+      } else {
+        infoEl.textContent = '';
+      }
+
+      atualizarPreco();
+    }
+
+    function atualizarPreco() {
+      const selecionadas = getSelecionadas();
+      const precoUnit = calcularPrecoUnitario(selecionadas);
+      const botao = document.getElementById('botaoCarrinho');
+
+      if (precoUnit === null) {
+        document.getElementById('precoFinal').textContent = '—';
+        document.getElementById('precoFinalDetalhe').textContent = 'Selecione os sabores';
+        document.getElementById('botaoPreco').textContent = '';
+        botao.disabled = true;
+        botao.classList.remove('bg-neutral-800', 'hover:bg-neutral-700');
+        botao.classList.add('bg-neutral-300');
+        return;
+      }
+
+      const total = precoUnit * quantidade;
+      document.getElementById('precoFinal').textContent = formatar(total);
+      document.getElementById('precoFinalDetalhe').textContent =
+        `${quantidade} × ${formatar(precoUnit)}${modoPreco === 'composicional' ? ' (média)' : ''}`;
+      document.getElementById('botaoPreco').textContent = `· ${formatar(total)}`;
+
+      botao.disabled = false;
+      botao.classList.add('bg-neutral-800', 'hover:bg-neutral-700');
+      botao.classList.remove('bg-neutral-300');
+    }
+
+    function selecionarPreset(btn, val) {
+      quantidade = val;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      document.getElementById('quantidadeValor').value = val;
+      atualizarPreco();
+    }
+
+    function ajustar(delta) {
+      quantidade = Math.max(1, quantidade + delta);
+      document.getElementById('quantidadeValor').value = quantidade;
+      document.querySelectorAll('.qty-preset').forEach(b => {
+        b.classList.toggle('ativo', parseInt(b.textContent) === quantidade);
+      });
+      atualizarPreco();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 1) {
+        quantidade = val;
+        document.querySelectorAll('.qty-preset').forEach(b => {
+          b.classList.toggle('ativo', parseInt(b.textContent) === quantidade);
+        });
+        atualizarPreco();
+      }
+    }
+
+    function adicionarCarrinho() {
+      const selecionadas = getSelecionadas();
+      const nomes = selecionadas.map(c => c.closest('label').querySelector('[name$="-nome"]').textContent).join(' + ');
+      const obs = document.getElementById('observacoesInput').value;
+      const precoUnit = calcularPrecoUnitario(selecionadas);
+      alert(`✓ ${quantidade}× adicionado ao carrinho\nSabores: ${nomes}\nTotal: ${formatar(precoUnit * quantidade)}${obs ? '\nObs: ' + obs : ''}`);
+    }
+  </script>
+
+</body>
+</html>

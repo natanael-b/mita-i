@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – PDV</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- BLOCO PDV -->
+  <section name="bloco-pdv" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-52 md:h-64 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo"
+        alt="Imagem de capa"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- CABEÇALHO -->
+      <div name="cabecalho" class="flex items-center justify-between gap-4">
+        <div>
+          <h1 name="titulo" class="text-xl font-semibold text-neutral-800">Ponto de Venda</h1>
+          <p name="subtitulo" class="text-sm text-neutral-400 mt-0.5">Adicione itens e finalize a venda</p>
+        </div>
+        <button name="btn-limpar" onclick="limparVenda()" class="cursor-pointer text-xs text-neutral-400 hover:text-neutral-700 transition-colors shrink-0">Limpar tudo</button>
+      </div>
+
+      <!-- DESCRIÇÃO HTML LIVRE -->
+      <div name="descricao" class="text-sm text-neutral-600 leading-relaxed">
+        <p name="descricao-paragrafo-1">Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong> — use para informar condições, promoções ou instruções ao operador.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- BUSCA / CÓDIGO DE BARRAS -->
+      <div name="secao-busca" class="space-y-2">
+        <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Buscar produto ou código</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <svg class="w-4 h-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input
+            name="campo-busca"
+            id="campoBusca"
+            type="text"
+            placeholder="Nome do produto ou código de barras..."
+            oninput="buscarProduto(this.value)"
+            onkeydown="if(event.key==='Enter') adicionarPrimeiro()"
+            class="field-input w-full rounded-xl pl-10 pr-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+          />
+
+          <!-- RESULTADOS DA BUSCA -->
+          <div name="resultados-busca" id="resultadosBusca" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-[#EBEBEB] rounded-xl shadow-lg overflow-hidden z-20">
+            <div id="listaResultados" class="divide-y divide-neutral-100 max-h-48 overflow-y-auto"></div>
+          </div>
+        </div>
+        <p name="busca-dica" class="text-xs text-neutral-400">Pressione Enter para adicionar o primeiro resultado.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- LISTA DE ITENS -->
+      <div name="secao-itens" class="space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Itens da venda</p>
+          <p id="contadorItens" class="text-xs text-neutral-400">0 itens</p>
+        </div>
+
+        <div name="lista-itens" id="listaItens" class="border border-[#EBEBEB] rounded-xl overflow-hidden min-h-[60px]">
+          <p id="listaVazia" class="text-sm text-neutral-300 text-center py-6">Nenhum item adicionado</p>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- SUBTOTAL / RESUMO -->
+      <div name="secao-subtotal" class="space-y-2.5">
+
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Subtotal</span>
+          <span name="subtotal-valor" id="subtotalValor" class="text-sm font-medium text-neutral-700">R$ 0,00</span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Qtd. de itens</span>
+          <span name="subtotal-qtd" id="subtotalQtd" class="text-sm font-medium text-neutral-700">0</span>
+        </div>
+
+        <!-- LINHA DESCONTO — aparece só quando há desconto -->
+        <div name="linha-desconto" id="linhaDesconto" class="hidden flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Desconto <span id="labelDesconto" class="text-xs text-neutral-400"></span></span>
+          <span name="desconto-valor" id="descontoValor" class="text-sm font-medium text-green-600"></span>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <div class="flex justify-between items-center">
+          <span class="text-base font-semibold text-neutral-800">Total</span>
+          <span name="total-valor" id="totalValor" class="text-xl font-semibold text-neutral-800">R$ 0,00</span>
+        </div>
+
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- DESCONTO -->
+      <div name="secao-desconto" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Desconto</p>
+
+        <!-- TIPO DE DESCONTO -->
+        <div name="tipo-desconto" class="flex gap-2">
+          <button name="tipo-percentual" id="btnPercentual" onclick="setTipoDesconto('percentual')"
+            class="tipo-desc-btn ativo cursor-pointer flex-1 border border-[#262626] bg-[#262626] text-white rounded-xl py-2 text-xs font-semibold transition-all">
+            % Percentual
+          </button>
+          <button name="tipo-fixo" id="btnFixo" onclick="setTipoDesconto('fixo')"
+            class="tipo-desc-btn cursor-pointer flex-1 border border-[#E8E8E8] text-neutral-600 rounded-xl py-2 text-xs font-semibold transition-all hover:bg-neutral-50">
+            R$ Valor fixo
+          </button>
+        </div>
+
+        <!-- CAMPO DE DESCONTO -->
+        <div class="flex gap-2 items-center">
+          <div class="relative flex-1">
+            <span id="prefixoDesconto" class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-400 pointer-events-none">%</span>
+            <input
+              name="campo-desconto"
+              id="campoDesconto"
+              type="number"
+              min="0"
+              placeholder="0"
+              oninput="aplicarDesconto()"
+              class="field-input w-full rounded-xl pl-8 pr-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+            />
+          </div>
+          <button onclick="limparDesconto()" class="cursor-pointer shrink-0 border border-neutral-200 hover:bg-neutral-50 text-neutral-400 hover:text-neutral-600 text-xs font-medium px-3 py-2.5 rounded-xl transition-colors">
+            Limpar
+          </button>
+        </div>
+
+        <p name="desconto-dica" id="descontoDica" class="text-xs text-neutral-400">Insira o percentual de desconto a aplicar.</p>
+      </div>
+
+      <!-- BOTÃO FINALIZAR VENDA -->
+      <button
+        name="botao-finalizar"
+        id="botaoFinalizar"
+        type="button"
+        onclick="finalizarVenda()"
+        disabled
+        class="cursor-pointer w-full bg-neutral-300 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors duration-150 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+      >
+        <span>🧾</span>
+        <span name="botao-finalizar-texto">Finalizar venda</span>
+        <span id="botaoTotal" class="opacity-60 font-normal"></span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    // ─── CATÁLOGO DE PRODUTOS ────────────────────────────────────────────────────
+    // Em produção, substituir por chamada de API ou banco de dados
+    const CATALOGO = [
+      { codigo: '001', nome: 'Coca-Cola 350ml',       preco: 5.90  },
+      { codigo: '002', nome: 'Água Mineral 500ml',    preco: 2.50  },
+      { codigo: '003', nome: 'Suco de Laranja 1L',    preco: 8.90  },
+      { codigo: '004', nome: 'Pão Francês (un)',       preco: 0.90  },
+      { codigo: '005', nome: 'Queijo Mussarela 100g', preco: 6.50  },
+      { codigo: '006', nome: 'Presunto 100g',         preco: 4.90  },
+      { codigo: '007', nome: 'Iogurte Natural',       preco: 3.50  },
+      { codigo: '008', nome: 'Chocolate ao Leite',    preco: 7.90  },
+      { codigo: '009', nome: 'Biscoito Recheado',     preco: 3.20  },
+      { codigo: '010', nome: 'Café 500g',             preco: 18.90 },
+    ];
+
+    let itensVenda = []; // { codigo, nome, preco, quantidade }
+    let resultadosAtuais = [];
+    let tipoDesconto = 'percentual';
+    let valorDesconto = 0;
+
+    function fmt(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ─── DESCONTO ────────────────────────────────────────────────────────────────
+    function setTipoDesconto(tipo) {
+      tipoDesconto = tipo;
+      document.getElementById('prefixoDesconto').textContent = tipo === 'percentual' ? '%' : 'R$';
+      document.getElementById('descontoDica').textContent =
+        tipo === 'percentual'
+          ? 'Insira o percentual de desconto a aplicar.'
+          : 'Insira o valor fixo de desconto em reais.';
+      document.querySelectorAll('.tipo-desc-btn').forEach(b => {
+        b.classList.remove('ativo', 'border-[#262626]', 'bg-[#262626]', 'text-white');
+        b.classList.add('border-[#E8E8E8]', 'text-neutral-600');
+      });
+      const btn = tipo === 'percentual'
+        ? document.getElementById('btnPercentual')
+        : document.getElementById('btnFixo');
+      btn.classList.add('ativo', 'border-[#262626]', 'bg-[#262626]', 'text-white');
+      btn.classList.remove('border-[#E8E8E8]', 'text-neutral-600');
+      document.getElementById('campoDesconto').value = '';
+      valorDesconto = 0;
+      renderizarItens();
+    }
+
+    function aplicarDesconto() {
+      valorDesconto = parseFloat(document.getElementById('campoDesconto').value) || 0;
+      renderizarItens();
+    }
+
+    function limparDesconto() {
+      document.getElementById('campoDesconto').value = '';
+      valorDesconto = 0;
+      renderizarItens();
+    }
+
+    function calcDesconto(subtotal) {
+      if (valorDesconto <= 0) return 0;
+      if (tipoDesconto === 'percentual') return Math.min(subtotal, subtotal * (valorDesconto / 100));
+      return Math.min(subtotal, valorDesconto);
+    }
+
+    // ─── BUSCA ───────────────────────────────────────────────────────────────────
+    function buscarProduto(termo) {
+      const resultados = document.getElementById('resultadosBusca');
+      const lista      = document.getElementById('listaResultados');
+
+      if (!termo.trim()) {
+        resultados.classList.add('hidden');
+        resultadosAtuais = [];
+        return;
+      }
+
+      const t = termo.toLowerCase();
+      resultadosAtuais = CATALOGO.filter(p =>
+        p.nome.toLowerCase().includes(t) || p.codigo.includes(t)
+      );
+
+      if (resultadosAtuais.length === 0) {
+        lista.innerHTML = `<p class="text-sm text-neutral-400 text-center py-4">Nenhum produto encontrado.</p>`;
+      } else {
+        lista.innerHTML = resultadosAtuais.map((p, i) => `
+          <button onclick="adicionarItem('${p.codigo}')" class="resultado-item cursor-pointer w-full flex items-center justify-between gap-3 px-4 py-3 text-left">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-neutral-800 truncate">${p.nome}</p>
+              <p class="text-xs text-neutral-400">Cód: ${p.codigo}</p>
+            </div>
+            <p class="text-sm font-semibold text-neutral-700 shrink-0">${fmt(p.preco)}</p>
+          </button>
+        `).join('');
+      }
+
+      resultados.classList.remove('hidden');
+    }
+
+    function adicionarPrimeiro() {
+      if (resultadosAtuais.length > 0) {
+        adicionarItem(resultadosAtuais[0].codigo);
+      }
+    }
+
+    // ─── ADICIONAR ITEM ──────────────────────────────────────────────────────────
+    function adicionarItem(codigo) {
+      const produto = CATALOGO.find(p => p.codigo === codigo);
+      if (!produto) return;
+
+      const existente = itensVenda.find(i => i.codigo === codigo);
+      if (existente) {
+        existente.quantidade++;
+      } else {
+        itensVenda.push({ ...produto, quantidade: 1 });
+      }
+
+      // limpa busca
+      document.getElementById('campoBusca').value = '';
+      document.getElementById('resultadosBusca').classList.add('hidden');
+      resultadosAtuais = [];
+
+      renderizarItens();
+    }
+
+    // ─── ALTERAR QUANTIDADE ──────────────────────────────────────────────────────
+    function alterarQtd(codigo, delta) {
+      const item = itensVenda.find(i => i.codigo === codigo);
+      if (!item) return;
+      item.quantidade = Math.max(1, item.quantidade + delta);
+      renderizarItens();
+    }
+
+    // ─── REMOVER ITEM ────────────────────────────────────────────────────────────
+    function removerItem(codigo) {
+      itensVenda = itensVenda.filter(i => i.codigo !== codigo);
+      renderizarItens();
+    }
+
+    // ─── LIMPAR VENDA ────────────────────────────────────────────────────────────
+    function limparVenda() {
+      itensVenda = [];
+      renderizarItens();
+    }
+
+    // ─── RENDERIZAR ──────────────────────────────────────────────────────────────
+    function renderizarItens() {
+      const lista   = document.getElementById('listaItens');
+      const vazia   = document.getElementById('listaVazia');
+      const totalQtd  = itensVenda.reduce((a, i) => a + i.quantidade, 0);
+      const subtotal  = itensVenda.reduce((a, i) => a + i.preco * i.quantidade, 0);
+      const desconto  = calcDesconto(subtotal);
+      const total     = subtotal - desconto;
+
+      document.getElementById('contadorItens').textContent =
+        `${itensVenda.length} ${itensVenda.length === 1 ? 'item' : 'itens'}`;
+      document.getElementById('subtotalValor').textContent = fmt(subtotal);
+      document.getElementById('subtotalQtd').textContent   = totalQtd;
+      document.getElementById('totalValor').textContent    = fmt(total);
+      document.getElementById('botaoTotal').textContent    = itensVenda.length > 0 ? `· ${fmt(total)}` : '';
+
+      // linha de desconto
+      const linhaDesc = document.getElementById('linhaDesconto');
+      if (desconto > 0) {
+        linhaDesc.classList.remove('hidden');
+        document.getElementById('descontoValor').textContent = `− ${fmt(desconto)}`;
+        document.getElementById('labelDesconto').textContent =
+          tipoDesconto === 'percentual' ? `(${valorDesconto}%)` : '';
+      } else {
+        linhaDesc.classList.add('hidden');
+      }
+
+      const btn = document.getElementById('botaoFinalizar');
+      btn.disabled = itensVenda.length === 0;
+      btn.classList.toggle('bg-neutral-800',  itensVenda.length > 0);
+      btn.classList.toggle('hover:bg-neutral-700', itensVenda.length > 0);
+      btn.classList.toggle('bg-neutral-300',  itensVenda.length === 0);
+
+      if (itensVenda.length === 0) {
+        lista.innerHTML = `<p id="listaVazia" class="text-sm text-neutral-300 text-center py-6">Nenhum item adicionado</p>`;
+        return;
+      }
+
+      lista.innerHTML = itensVenda.map(item => `
+        <div name="item-${item.codigo}" class="item-row flex items-center gap-3 px-4 py-3">
+
+          <div class="flex-1 min-w-0">
+            <p name="item-${item.codigo}-nome" class="text-sm font-medium text-neutral-800 truncate">${item.nome}</p>
+            <p name="item-${item.codigo}-preco-unit" class="text-xs text-neutral-400">${fmt(item.preco)} / un</p>
+          </div>
+
+          <div name="item-${item.codigo}-quantidade" class="flex items-center gap-1.5 shrink-0">
+            <button onclick="alterarQtd('${item.codigo}', -1)" class="qty-btn cursor-pointer w-7 h-7 rounded-lg text-neutral-600 text-base font-light flex items-center justify-center select-none">−</button>
+            <span name="item-${item.codigo}-quantidade-valor" class="text-sm font-medium text-neutral-800 w-6 text-center">${item.quantidade}</span>
+            <button onclick="alterarQtd('${item.codigo}', 1)" class="qty-btn cursor-pointer w-7 h-7 rounded-lg text-neutral-600 text-base font-light flex items-center justify-center select-none">+</button>
+          </div>
+
+          <p name="item-${item.codigo}-total" class="text-sm font-semibold text-neutral-800 w-20 text-right shrink-0">${fmt(item.preco * item.quantidade)}</p>
+
+          <button onclick="removerItem('${item.codigo}')" class="cursor-pointer text-neutral-300 hover:text-neutral-600 text-xl leading-none transition-colors shrink-0">×</button>
+
+        </div>
+      `).join('');
+    }
+
+    // ─── FECHAR RESULTADOS AO CLICAR FORA ───────────────────────────────────────
+    document.addEventListener('click', e => {
+      if (!e.target.closest('[name="secao-busca"]')) {
+        document.getElementById('resultadosBusca').classList.add('hidden');
+      }
+    });
+
+    // ─── FINALIZAR VENDA ─────────────────────────────────────────────────────────
+    function finalizarVenda() {
+      const subtotal = itensVenda.reduce((a, i) => a + i.preco * i.quantidade, 0);
+      const desconto = calcDesconto(subtotal);
+      const total    = subtotal - desconto;
+      const resumo   = itensVenda.map(i => `${i.quantidade}× ${i.nome} — ${fmt(i.preco * i.quantidade)}`).join('\n');
+      alert(`✓ Venda finalizada!\n\n${resumo}${desconto > 0 ? `\n\nDesconto: − ${fmt(desconto)}` : ''}\n\nTotal: ${fmt(total)}`);
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    renderizarItens();
+  </script>
+
+</body>
+</html>

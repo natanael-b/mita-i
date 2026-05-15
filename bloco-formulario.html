@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Formulário de Coleta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- BLOCO FORMULÁRIO DE COLETA -->
+  <section name="bloco-formulario" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo"
+        alt="Imagem de capa"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- CABEÇALHO -->
+      <div name="cabecalho">
+        <h1 name="titulo" class="text-xl font-semibold text-neutral-800 leading-snug">Título do Formulário</h1>
+        <p name="subtitulo" class="text-sm text-neutral-400 mt-0.5">Subtítulo ou instrução geral</p>
+      </div>
+
+      <!-- DESCRIÇÃO HTML LIVRE -->
+      <div name="descricao" class="text-sm text-neutral-600 leading-relaxed space-y-2">
+        <p name="descricao-paragrafo-1">
+          Preencha os campos abaixo. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong> com ênfases, listas e links.
+        </p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- CAMPOS DO FORMULÁRIO -->
+      <div name="formulario-campos" class="space-y-5">
+
+        <!-- INPUT TEXTO -->
+        <div name="campo-texto" class="space-y-1.5">
+          <label name="campo-texto-label" for="campo-texto-input" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">
+            Nome completo
+          </label>
+          <input
+            name="campo-texto-input"
+            id="campo-texto-input"
+            type="text"
+            placeholder="Ex: João da Silva"
+            class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+          />
+          <p name="campo-texto-dica" class="text-xs text-neutral-400">Digite seu nome como consta no documento.</p>
+        </div>
+
+        <!-- INPUT NÚMERO -->
+        <div name="campo-numero" class="space-y-1.5">
+          <label name="campo-numero-label" for="campo-numero-input" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">
+            Quantidade
+          </label>
+          <input
+            name="campo-numero-input"
+            id="campo-numero-input"
+            type="number"
+            placeholder="Ex: 10"
+            min="0"
+            class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+          />
+          <p name="campo-numero-dica" class="text-xs text-neutral-400">Informe apenas números inteiros.</p>
+        </div>
+
+        <!-- INPUT DATA -->
+        <div name="campo-data" class="space-y-1.5">
+          <label name="campo-data-label" for="campo-data-input" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">
+            Data
+          </label>
+          <input
+            name="campo-data-input"
+            id="campo-data-input"
+            type="date"
+            class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 bg-white cursor-pointer"
+          />
+          <p name="campo-data-dica" class="text-xs text-neutral-400">Selecione a data desejada.</p>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- SELECT -->
+        <div name="campo-select" class="space-y-1.5">
+          <label name="campo-select-label" for="campo-select-input" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">
+            Categoria
+          </label>
+          <div class="relative">
+            <select
+              name="campo-select-input"
+              id="campo-select-input"
+              class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 bg-white appearance-none cursor-pointer pr-10"
+            >
+              <option name="campo-select-opcao-padrao" value="" disabled selected>Selecione uma opção</option>
+              <option name="campo-select-opcao-1" value="opcao-1">Opção 1</option>
+              <option name="campo-select-opcao-2" value="opcao-2">Opção 2</option>
+              <option name="campo-select-opcao-3" value="opcao-3">Opção 3</option>
+              <option name="campo-select-opcao-4" value="opcao-4">Opção 4</option>
+            </select>
+            <!-- Ícone seta -->
+            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg class="w-4 h-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <p name="campo-select-dica" class="text-xs text-neutral-400">Escolha a categoria que melhor se aplica.</p>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- RADIO -->
+        <div name="campo-radio" class="space-y-2">
+          <p name="campo-radio-label" class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Preferência</p>
+          <p name="campo-radio-dica" class="text-xs text-neutral-400">Selecione apenas uma opção.</p>
+
+          <div class="space-y-1 mt-1">
+
+            <label name="campo-radio-opcao-1" for="radio-1" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-radio" type="radio" id="radio-1" name="campo-radio-input" value="radio-1" />
+              <span name="campo-radio-opcao-1-texto" class="text-sm text-neutral-700">Opção A</span>
+            </label>
+
+            <label name="campo-radio-opcao-2" for="radio-2" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-radio" type="radio" id="radio-2" name="campo-radio-input" value="radio-2" />
+              <span name="campo-radio-opcao-2-texto" class="text-sm text-neutral-700">Opção B</span>
+            </label>
+
+            <label name="campo-radio-opcao-3" for="radio-3" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-radio" type="radio" id="radio-3" name="campo-radio-input" value="radio-3" />
+              <span name="campo-radio-opcao-3-texto" class="text-sm text-neutral-700">Opção C</span>
+            </label>
+
+          </div>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- CHECKBOX -->
+        <div name="campo-checkbox" class="space-y-2">
+          <p name="campo-checkbox-label" class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Interesses</p>
+          <p name="campo-checkbox-dica" class="text-xs text-neutral-400">Selecione quantas opções quiser.</p>
+
+          <div class="space-y-1 mt-1">
+
+            <label name="campo-checkbox-opcao-1" for="check-1" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-check" type="checkbox" id="check-1" name="campo-checkbox-input" value="check-1" />
+              <span name="campo-checkbox-opcao-1-texto" class="text-sm text-neutral-700">Interesse A</span>
+            </label>
+
+            <label name="campo-checkbox-opcao-2" for="check-2" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-check" type="checkbox" id="check-2" name="campo-checkbox-input" value="check-2" />
+              <span name="campo-checkbox-opcao-2-texto" class="text-sm text-neutral-700">Interesse B</span>
+            </label>
+
+            <label name="campo-checkbox-opcao-3" for="check-3" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-check" type="checkbox" id="check-3" name="campo-checkbox-input" value="check-3" />
+              <span name="campo-checkbox-opcao-3-texto" class="text-sm text-neutral-700">Interesse C</span>
+            </label>
+
+            <label name="campo-checkbox-opcao-4" for="check-4" class="option-label flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer">
+              <input class="custom-check" type="checkbox" id="check-4" name="campo-checkbox-input" value="check-4" />
+              <span name="campo-checkbox-opcao-4-texto" class="text-sm text-neutral-700">Interesse D</span>
+            </label>
+
+          </div>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- BOTÃO DE ENVIO -->
+        <div name="campo-envio">
+          <button
+            name="botao-enviar"
+            type="button"
+            class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors duration-150"
+          >
+            <span name="botao-enviar-texto">Enviar</span>
+          </button>
+          <p name="campo-envio-aviso" class="text-xs text-neutral-400 text-center mt-2">Seus dados estão seguros e não serão compartilhados.</p>
+        </div>
+
+      </div>
+      <!-- FIM DOS CAMPOS -->
+
+    </div>
+  </section>
+
+</body>
+</html>

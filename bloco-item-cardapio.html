@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item do Cardápio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- BLOCO ITEM CARDÁPIO -->
+  <section name="bloco-item-cardapio" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Item"
+        alt="Foto do item"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- NOME E PREÇO UNITÁRIO -->
+      <div name="cabecalho-item" class="flex items-start justify-between gap-4">
+        <h1 name="item-nome" class="text-xl font-semibold text-neutral-800 leading-snug">Nome do Item</h1>
+        <div class="text-right shrink-0">
+          <p name="item-preco-unitario" class="text-xl font-semibold text-neutral-800">R$ 24,90</p>
+          <p name="item-unidade" class="text-xs text-neutral-400">/unidade</p>
+        </div>
+      </div>
+
+      <!-- DESCRIÇÃO HTML LIVRE -->
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed space-y-2">
+        <p name="item-descricao-paragrafo-1">
+          Descrição livre do item com <strong class="font-medium text-neutral-700">ingredientes</strong>, modo de preparo, alergênicos ou qualquer detalhe relevante. Este campo aceita HTML rico.
+        </p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- QUANTIDADE -->
+      <div name="secao-quantidade" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+
+        <!-- PRESETS 1–5 + campo livre com - e + -->
+        <div class="flex items-center gap-2 flex-wrap">
+
+          <!-- BOTÕES PRESET -->
+          <div name="quantidade-presets" class="flex gap-1.5">
+            <button name="qty-preset-1" onclick="selecionarPreset(this, 1)" class="qty-preset ativo cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">1</button>
+            <button name="qty-preset-2" onclick="selecionarPreset(this, 2)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">2</button>
+            <button name="qty-preset-3" onclick="selecionarPreset(this, 3)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">3</button>
+            <button name="qty-preset-4" onclick="selecionarPreset(this, 4)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">4</button>
+            <button name="qty-preset-5" onclick="selecionarPreset(this, 5)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">5</button>
+          </div>
+
+          <!-- SEPARADOR VISUAL -->
+          <span class="text-neutral-200 text-sm select-none">|</span>
+
+          <!-- CAMPO LIVRE COM - E + -->
+          <div name="quantidade-livre" class="flex items-center gap-1.5">
+            <button name="qty-btn-menos" onclick="ajustar(-1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">−</button>
+            <input
+              name="quantidade-valor"
+              id="quantidadeValor"
+              type="number"
+              min="1"
+              value="1"
+              oninput="atualizarPorInput(this)"
+              class="w-12 h-9 text-center text-sm font-medium text-neutral-800 border border-[#E8E8E8] rounded-xl focus:outline-none focus:border-neutral-400 bg-white"
+            />
+            <button name="qty-btn-mais" onclick="ajustar(1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center select-none">+</button>
+          </div>
+
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PREÇO FINAL -->
+      <div name="secao-preco-final" class="flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total</p>
+          <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">R$ 24,90</p>
+        </div>
+        <p name="item-preco-final-detalhe" id="precoFinalDetalhe" class="text-xs text-neutral-400">1 × R$ 24,90</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- OBSERVAÇÕES -->
+      <div name="secao-observacoes" class="space-y-2">
+        <label name="observacoes-label" for="observacoesInput" class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+        <textarea
+          name="observacoes-input"
+          id="observacoesInput"
+          rows="3"
+          placeholder="Ex: sem cebola, ponto da carne bem passado, molho à parte..."
+          class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"
+        ></textarea>
+        <p name="observacoes-dica" class="text-xs text-neutral-400">Pedidos especiais estão sujeitos à disponibilidade.</p>
+      </div>
+
+      <!-- BOTÃO ADICIONAR AO CARRINHO -->
+      <button
+        name="botao-carrinho"
+        type="button"
+        onclick="adicionarCarrinho()"
+        class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-900 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors duration-150 flex items-center justify-center gap-2"
+      >
+        <span>🛒</span>
+        <span name="botao-carrinho-texto">Adicionar ao carrinho</span>
+        <span name="botao-carrinho-preco" id="botaoPreco" class="opacity-60 font-normal">· R$ 24,90</span>
+      </button>
+
+    </div>
+  </section>
+
+  <script>
+    const precoUnitario = 24.90;
+    let quantidade = 1;
+
+    function formatar(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function atualizar() {
+      const total = precoUnitario * quantidade;
+      document.getElementById('precoFinal').textContent = formatar(total);
+      document.getElementById('precoFinalDetalhe').textContent = `${quantidade} × ${formatar(precoUnitario)}`;
+      document.getElementById('botaoPreco').textContent = `· ${formatar(total)}`;
+      document.getElementById('quantidadeValor').value = quantidade;
+
+      // atualiza presets
+      document.querySelectorAll('.qty-preset').forEach(btn => {
+        btn.classList.toggle('ativo', parseInt(btn.textContent) === quantidade);
+      });
+    }
+
+    function selecionarPreset(btn, val) {
+      quantidade = val;
+      atualizar();
+    }
+
+    function ajustar(delta) {
+      quantidade = Math.max(1, quantidade + delta);
+      atualizar();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 1) {
+        quantidade = val;
+        atualizar();
+      }
+    }
+
+    function adicionarCarrinho() {
+      const obs = document.getElementById('observacoesInput').value;
+      alert(`✓ ${quantidade}× adicionado ao carrinho\n${obs ? 'Obs: ' + obs : ''}`);
+    }
+  </script>
+
+</body>
+</html>

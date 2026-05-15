@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Carrinho</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <!-- BLOCO CARRINHO -->
+  <section name="bloco-carrinho" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img
+        name="imagem-topo-src"
+        src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo"
+        alt="Imagem de capa"
+        class="w-full h-full object-cover"
+      />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <!-- CABEÇALHO -->
+      <div name="cabecalho" class="flex items-center justify-between">
+        <div>
+          <h1 name="titulo" class="text-xl font-semibold text-neutral-800">Seu Carrinho</h1>
+          <p name="subtitulo" id="subtituloCarrinho" class="text-sm text-neutral-400 mt-0.5">3 itens</p>
+        </div>
+        <button name="btn-limpar" onclick="limparCarrinho()" class="cursor-pointer text-xs text-neutral-400 hover:text-neutral-700 transition-colors">Limpar tudo</button>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- LISTA DE ITENS -->
+      <div name="lista-itens" id="listaItens" class="space-y-3"></div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- CUPOM DE DESCONTO -->
+      <div name="secao-cupom" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Cupom de desconto</p>
+
+        <div class="flex gap-2">
+          <input
+            name="cupom-input"
+            id="cupomInput"
+            type="text"
+            placeholder="Digite seu cupom"
+            class="cupom-input flex-1 rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white uppercase"
+          />
+          <button
+            name="cupom-btn-aplicar"
+            onclick="aplicarCupom()"
+            class="cursor-pointer shrink-0 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors duration-150"
+          >
+            Aplicar
+          </button>
+        </div>
+
+        <!-- CUPOM APLICADO -->
+        <div name="cupom-aplicado" id="cupomAplicado" class="hidden cupom-aplicado rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-medium text-neutral-700">Cupom <span id="cupomNome" class="font-semibold"></span> aplicado</p>
+            <p name="cupom-descricao" id="cupomDescricao" class="text-xs text-neutral-400 mt-0.5"></p>
+          </div>
+          <button onclick="removerCupom()" class="cursor-pointer remover-btn text-neutral-300 text-lg leading-none shrink-0">×</button>
+        </div>
+
+        <p name="cupom-erro" id="cupomErro" class="hidden text-xs text-red-400">Cupom inválido ou expirado.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- RESUMO FINANCEIRO -->
+      <div name="secao-resumo" class="space-y-2.5">
+
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Subtotal</span>
+          <span name="resumo-subtotal" id="resumoSubtotal" class="text-sm text-neutral-700 font-medium">—</span>
+        </div>
+
+        <div name="linha-desconto-cupom" id="linhaDescontoCupom" class="hidden flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Desconto <span id="labelCupomResumo" class="text-xs"></span></span>
+          <span name="resumo-desconto-cupom" id="resumoDescontoCupom" class="text-sm text-green-600 font-medium"></span>
+        </div>
+
+        <div name="linha-desconto-extra" class="flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Desconto fidelidade</span>
+          <span name="resumo-desconto-extra" id="resumoDescontoExtra" class="text-sm text-green-600 font-medium">—</span>
+        </div>
+
+        <div name="linha-entrega" class="flex justify-between items-center">
+          <span class="text-sm text-neutral-500">Entrega</span>
+          <span name="resumo-entrega" id="resumoEntrega" class="text-sm text-neutral-700 font-medium">—</span>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <div class="flex justify-between items-center">
+          <span class="text-base font-semibold text-neutral-800">Total</span>
+          <span name="resumo-total" id="resumoTotal" class="text-xl font-semibold text-neutral-800">—</span>
+        </div>
+
+        <p name="resumo-economia" id="resumoEconomia" class="hidden text-xs text-green-600 text-right">Você economizou <span id="valorEconomia"></span> neste pedido!</p>
+
+      </div>
+
+      <!-- BOTÃO FINALIZAR -->
+      <button
+        name="botao-finalizar"
+        id="botaoFinalizar"
+        type="button"
+        onclick="finalizarPedido()"
+        class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-900 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors duration-150 flex items-center justify-center gap-2"
+      >
+        <span name="botao-finalizar-texto">Finalizar pedido</span>
+        <span name="botao-finalizar-total" id="botaoTotal" class="opacity-60 font-normal"></span>
+      </button>
+
+      <p name="nota-rodape" class="text-xs text-neutral-400 text-center">Ao finalizar você será direcionado para o pagamento.</p>
+
+    </div>
+  </section>
+
+  <script>
+    // ─── DADOS DOS ITENS ────────────────────────────────────────────────────────
+    // Estrutura: { id, nome, detalhe, preco, quantidade, imagem }
+    let itens = [
+      {
+        id: 1,
+        nome: 'Pizza Frango + Catupiry',
+        detalhe: 'Meia a meia · sem cebola',
+        preco: 35.90,
+        quantidade: 1,
+        imagem: 'https://placehold.co/80x80/DDDDDD/999999?text=P1'
+      },
+      {
+        id: 2,
+        nome: 'Refrigerante 2L',
+        detalhe: 'Coca-Cola',
+        preco: 12.90,
+        quantidade: 2,
+        imagem: 'https://placehold.co/80x80/DDDDDD/999999?text=P2'
+      },
+      {
+        id: 3,
+        nome: 'Sobremesa Brownie',
+        detalhe: 'Com sorvete de baunilha',
+        preco: 18.50,
+        quantidade: 1,
+        imagem: 'https://placehold.co/80x80/DDDDDD/999999?text=P3'
+      }
+    ];
+
+    // ─── CUPONS VÁLIDOS ─────────────────────────────────────────────────────────
+    const cupons = {
+      'BEMVINDO10': { tipo: 'percentual', valor: 10, label: '10% off' },
+      'FRETE':      { tipo: 'frete',      valor: 0,  label: 'Frete grátis' },
+      'DESC5':      { tipo: 'fixo',       valor: 5,  label: 'R$ 5,00 off' },
+    };
+
+    // ─── DESCONTOS FIXOS ─────────────────────────────────────────────────────────
+    const descontoFidelidade = 3.00; // R$ fixo — zere se não usar
+    const taxaEntrega        = 8.90;
+
+    let cupomAtivo = null;
+
+    // ─── FORMATAÇÃO ─────────────────────────────────────────────────────────────
+    function fmt(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ─── RENDERIZA ITENS ────────────────────────────────────────────────────────
+    function renderizarItens() {
+      const lista = document.getElementById('listaItens');
+      if (itens.length === 0) {
+        lista.innerHTML = `<p class="text-sm text-neutral-400 text-center py-4">Seu carrinho está vazio.</p>`;
+        document.getElementById('botaoFinalizar').disabled = true;
+        document.getElementById('botaoFinalizar').classList.add('opacity-50', 'cursor-not-allowed');
+        return;
+      }
+      document.getElementById('botaoFinalizar').disabled = false;
+      document.getElementById('botaoFinalizar').classList.remove('opacity-50', 'cursor-not-allowed');
+
+      lista.innerHTML = itens.map(item => `
+        <div name="item-${item.id}" class="item-row rounded-xl overflow-hidden flex items-stretch gap-0">
+
+          <div name="item-${item.id}-imagem-wrapper" class="w-20 shrink-0 bg-[#F0F0F0]">
+            <img name="item-${item.id}-imagem" src="${item.imagem}" alt="${item.nome}" class="w-full h-full object-cover" />
+          </div>
+
+          <div class="flex-1 min-w-0 p-3 flex flex-col justify-between gap-2">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p name="item-${item.id}-nome" class="text-sm font-semibold text-neutral-800 leading-snug truncate">${item.nome}</p>
+                <p name="item-${item.id}-detalhe" class="text-xs text-neutral-400 mt-0.5 truncate">${item.detalhe}</p>
+              </div>
+              <button onclick="removerItem(${item.id})" class="cursor-pointer remover-btn text-neutral-300 text-xl leading-none shrink-0 mt-0.5">×</button>
+            </div>
+
+            <div class="flex items-center justify-between gap-2">
+              <!-- CONTROLE DE QUANTIDADE -->
+              <div name="item-${item.id}-quantidade" class="flex items-center gap-1.5">
+                <button onclick="alterarQtd(${item.id}, -1)" class="qty-btn cursor-pointer w-7 h-7 rounded-lg text-neutral-600 text-base font-light flex items-center justify-center select-none">−</button>
+                <span name="item-${item.id}-quantidade-valor" class="text-sm font-medium text-neutral-800 w-5 text-center">${item.quantidade}</span>
+                <button onclick="alterarQtd(${item.id}, 1)" class="qty-btn cursor-pointer w-7 h-7 rounded-lg text-neutral-600 text-base font-light flex items-center justify-center select-none">+</button>
+              </div>
+              <p name="item-${item.id}-preco-total" class="text-sm font-semibold text-neutral-800">${fmt(item.preco * item.quantidade)}</p>
+            </div>
+          </div>
+
+        </div>
+      `).join('');
+
+      document.getElementById('subtituloCarrinho').textContent =
+        `${itens.reduce((a, i) => a + i.quantidade, 0)} ${itens.length === 1 ? 'item' : 'itens'}`;
+
+      atualizarResumo();
+    }
+
+    // ─── ALTERAR QUANTIDADE ──────────────────────────────────────────────────────
+    function alterarQtd(id, delta) {
+      const item = itens.find(i => i.id === id);
+      if (!item) return;
+      item.quantidade = Math.max(1, item.quantidade + delta);
+      renderizarItens();
+    }
+
+    // ─── REMOVER ITEM ────────────────────────────────────────────────────────────
+    function removerItem(id) {
+      itens = itens.filter(i => i.id !== id);
+      renderizarItens();
+    }
+
+    // ─── LIMPAR CARRINHO ─────────────────────────────────────────────────────────
+    function limparCarrinho() {
+      itens = [];
+      renderizarItens();
+    }
+
+    // ─── CUPOM ───────────────────────────────────────────────────────────────────
+    function aplicarCupom() {
+      const codigo = document.getElementById('cupomInput').value.trim().toUpperCase();
+      const erro   = document.getElementById('cupomErro');
+      const caixa  = document.getElementById('cupomAplicado');
+
+      if (!cupons[codigo]) {
+        erro.classList.remove('hidden');
+        caixa.classList.add('hidden');
+        cupomAtivo = null;
+        atualizarResumo();
+        return;
+      }
+
+      erro.classList.add('hidden');
+      cupomAtivo = { codigo, ...cupons[codigo] };
+
+      document.getElementById('cupomNome').textContent     = codigo;
+      document.getElementById('cupomDescricao').textContent = cupons[codigo].label;
+      document.getElementById('labelCupomResumo').textContent = `(${codigo})`;
+      caixa.classList.remove('hidden');
+      atualizarResumo();
+    }
+
+    function removerCupom() {
+      cupomAtivo = null;
+      document.getElementById('cupomAplicado').classList.add('hidden');
+      document.getElementById('cupomInput').value = '';
+      document.getElementById('labelCupomResumo').textContent = '';
+      atualizarResumo();
+    }
+
+    // ─── RESUMO FINANCEIRO ───────────────────────────────────────────────────────
+    function atualizarResumo() {
+      const subtotal = itens.reduce((a, i) => a + i.preco * i.quantidade, 0);
+
+      // desconto cupom
+      let descontoCupom = 0;
+      let entrega = taxaEntrega;
+
+      if (cupomAtivo) {
+        if (cupomAtivo.tipo === 'percentual') descontoCupom = subtotal * (cupomAtivo.valor / 100);
+        if (cupomAtivo.tipo === 'fixo')       descontoCupom = cupomAtivo.valor;
+        if (cupomAtivo.tipo === 'frete')      entrega = 0;
+      }
+
+      const totalEconomia = descontoCupom + descontoFidelidade + (taxaEntrega - entrega);
+      const total = Math.max(0, subtotal - descontoCupom - descontoFidelidade + entrega);
+
+      document.getElementById('resumoSubtotal').textContent      = fmt(subtotal);
+      document.getElementById('resumoDescontoExtra').textContent = descontoFidelidade > 0 ? `− ${fmt(descontoFidelidade)}` : '—';
+      document.getElementById('resumoEntrega').textContent       = entrega === 0 ? 'Grátis' : fmt(entrega);
+      document.getElementById('resumoTotal').textContent         = fmt(total);
+      document.getElementById('botaoTotal').textContent          = `· ${fmt(total)}`;
+
+      // linha cupom
+      const linhaCupom = document.getElementById('linhaDescontoCupom');
+      if (descontoCupom > 0) {
+        linhaCupom.classList.remove('hidden');
+        document.getElementById('resumoDescontoCupom').textContent = `− ${fmt(descontoCupom)}`;
+      } else {
+        linhaCupom.classList.add('hidden');
+      }
+
+      // economia
+      const econEl = document.getElementById('resumoEconomia');
+      if (totalEconomia > 0) {
+        econEl.classList.remove('hidden');
+        document.getElementById('valorEconomia').textContent = fmt(totalEconomia);
+      } else {
+        econEl.classList.add('hidden');
+      }
+    }
+
+    // ─── FINALIZAR ───────────────────────────────────────────────────────────────
+    function finalizarPedido() {
+      const subtotal = itens.reduce((a, i) => a + i.preco * i.quantidade, 0);
+      alert(`✓ Pedido enviado!\nTotal: ${document.getElementById('resumoTotal').textContent}`);
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    renderizarItens();
+  </script>
+
+</body>
+</html>

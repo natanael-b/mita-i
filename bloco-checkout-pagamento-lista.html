@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Checkout Pagamento (Lista)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-checkout-pagamento-lista" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <!-- IMAGEM DO TOPO -->
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x400/DDDDDD/999999?text=Imagem+do+Topo" alt="Imagem de capa" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho">
+        <h1 name="titulo" class="text-xl font-semibold text-neutral-800">Pagamento</h1>
+        <p name="subtitulo" class="text-sm text-neutral-400 mt-0.5">Divida como quiser entre os participantes</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- RESUMO DO TOTAL -->
+      <div name="secao-resumo-total" class="bg-neutral-50 border border-neutral-100 rounded-xl px-5 py-4 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total do pedido</p>
+          <p name="resumo-total-valor" id="totalPedido" class="text-2xl font-semibold text-neutral-800 mt-0.5"></p>
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Restante</p>
+          <p name="resumo-restante" id="totalRestante" class="text-xl font-semibold mt-0.5 text-neutral-800"></p>
+        </div>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- PAGAMENTOS JÁ ADICIONADOS -->
+      <div name="secao-adicionados" id="secaoAdicionados" class="hidden space-y-2">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Adicionados</p>
+        <div name="lista-adicionados" id="listaAdicionados" class="space-y-2"></div>
+        <hr class="border-neutral-100" />
+      </div>
+
+      <!-- FORMULÁRIO DO MEIO SELECIONADO -->
+      <div name="secao-formulario" id="secaoFormulario" class="hidden">
+        <div class="formulario-wrapper p-5 space-y-4">
+
+          <!-- CABEÇALHO DO FORMULÁRIO -->
+          <div class="flex items-center gap-3">
+            <span id="formularioIcone" class="text-xl"></span>
+            <div class="flex-1">
+              <p id="formularioTitulo" class="text-sm font-semibold text-neutral-800"></p>
+              <p id="formularioTaxa" class="text-xs text-neutral-400 hidden"></p>
+            </div>
+          </div>
+
+          <hr class="border-neutral-100" />
+
+          <!-- CAMPO VALOR -->
+          <div name="campo-valor" class="space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Valor</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-400 pointer-events-none">R$</span>
+                <input name="campo-valor-input" id="campoValor" type="number" min="0" step="0.01" placeholder="0,00"
+                  oninput="atualizarValorForm()"
+                  class="field-input w-full rounded-xl pl-9 pr-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+              </div>
+              <button onclick="preencherRestanteForm()" class="cursor-pointer shrink-0 border border-neutral-200 hover:bg-neutral-50 text-neutral-500 text-xs font-medium px-3 py-2.5 rounded-xl transition-colors whitespace-nowrap">
+                Restante
+              </button>
+            </div>
+            <p id="infoTaxa" class="text-xs text-neutral-400 hidden"></p>
+          </div>
+
+          <!-- CAMPOS EXTRAS (cartão, parcelas, etc.) -->
+          <div id="camposExtras" class="space-y-3"></div>
+
+          <!-- TROCO (só dinheiro) -->
+          <div id="campoDinheiroTroco" class="hidden space-y-1.5">
+            <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Precisa de troco?</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-400 pointer-events-none">R$</span>
+                <input name="campo-troco-input" id="campoTrocoForm" type="number" min="0" placeholder="Valor que irá pagar"
+                  oninput="calcularTrocoForm()"
+                  class="field-input w-full rounded-xl pl-9 pr-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+              </div>
+              <div class="shrink-0 border border-neutral-100 bg-neutral-50 rounded-xl px-3 py-2.5 text-sm text-center min-w-[100px]">
+                Troco: <span id="trocoValor" name="troco-valor" class="font-semibold text-neutral-700">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOTÕES -->
+          <div class="flex gap-2 pt-1">
+            <button onclick="cancelarForm()" class="cursor-pointer flex-1 border border-neutral-200 hover:bg-neutral-50 text-neutral-600 text-sm font-medium py-2.5 rounded-xl transition-colors">
+              Cancelar
+            </button>
+            <button name="botao-adicionar-meio" id="botaoAdicionarMeio" onclick="confirmarPagamento()"
+              class="cursor-pointer flex-1 bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
+              <span id="botaoAdicionarTexto">Adicionar</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LISTA DE MEIOS DISPONÍVEIS -->
+      <div name="secao-meios" id="secaoMeios" class="space-y-3">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Escolha uma forma de pagamento</p>
+        <div name="lista-meios" class="flex flex-col gap-2" id="listaMeios"></div>
+      </div>
+
+      <!-- BOTÃO FINALIZAR — aparece só quando total coberto -->
+      <div id="secaoFinalizar" class="hidden space-y-3">
+        <hr class="border-neutral-100" />
+        <button name="botao-finalizar" type="button" onclick="finalizarPedido()"
+          class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <span name="botao-finalizar-texto">Finalizar pedido</span>
+          <span id="botaoFinalizarTotal" class="opacity-60 font-normal"></span>
+        </button>
+        <p name="nota-rodape" class="text-xs text-neutral-400 text-center">Seu pedido será confirmado após o pagamento.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // ─── CONFIGURAÇÃO ────────────────────────────────────────────────────────────
+    const TOTAL_PEDIDO = 89.90;
+
+    const METODOS = [
+      { id: 'pix',      label: 'Pix',           icone: '⚡', taxa: 0,    campos: [] },
+      { id: 'dinheiro', label: 'Dinheiro',       icone: '💵', taxa: 0,    campos: [], troco: true },
+      { id: 'debito',   label: 'Débito',         icone: '💳', taxa: 0,    campos: [
+        { name: 'numero',   label: 'Número do cartão', type: 'text', placeholder: '0000 0000 0000 0000', mask: 'cartao' },
+        { name: 'nome',     label: 'Nome no cartão',   type: 'text', placeholder: 'Como está no cartão' },
+        { name: 'validade', label: 'Validade',          type: 'text', placeholder: 'MM/AA', mask: 'validade', half: true },
+      ]},
+      { id: 'credito',  label: 'Crédito',        icone: '💳', taxa: 0.03, campos: [
+        { name: 'numero',   label: 'Número do cartão', type: 'text', placeholder: '0000 0000 0000 0000', mask: 'cartao' },
+        { name: 'nome',     label: 'Nome no cartão',   type: 'text', placeholder: 'Como está no cartão' },
+        { name: 'validade', label: 'Validade',          type: 'text', placeholder: 'MM/AA', mask: 'validade', half: true },
+        { name: 'cvv',      label: 'CVV',               type: 'text', placeholder: '000', half: true },
+        { name: 'parcelas', label: 'Parcelas',          type: 'select', opcoes: ['1× sem juros', '2× sem juros', '3× sem juros', '4× sem juros', '6× sem juros', '12× com juros'] },
+      ]},
+      { id: 'vale',     label: 'Vale Refeição',  icone: '🎫', taxa: 0,    campos: [
+        { name: 'bandeira', label: 'Bandeira', type: 'select', opcoes: ['Alelo', 'Sodexo', 'VR', 'Ticket', 'Flash'] },
+      ]},
+    ];
+
+    let pagamentosAdicionados = []; // { metodoId, valor, taxa, extras }
+    let metodoAtivo = null;         // metodo sendo preenchido agora
+
+    function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    // ─── TOTAIS ──────────────────────────────────────────────────────────────────
+    function totalAlocado() {
+      return pagamentosAdicionados.reduce((a, p) => a + p.valor, 0);
+    }
+    function totalComTaxas() {
+      return pagamentosAdicionados.reduce((a, p) => {
+        const m = METODOS.find(m => m.id === p.metodoId);
+        return a + p.valor * (1 + (m?.taxa || 0));
+      }, 0);
+    }
+    function restante() {
+      return Math.max(0, TOTAL_PEDIDO - totalAlocado());
+    }
+
+    // ─── RENDERIZA MEIOS DISPONÍVEIS ─────────────────────────────────────────────
+    function renderizarMeios() {
+      document.getElementById('listaMeios').innerHTML = METODOS.map(m => `
+        <button onclick="selecionarMeio('${m.id}')"
+          class="metodo-opcao cursor-pointer rounded-xl px-4 py-3.5 flex items-center gap-4 text-left w-full">
+          <span class="text-2xl shrink-0">${m.icone}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-neutral-800">${m.label}</p>
+            ${m.taxa > 0 ? `<p class="text-xs text-neutral-400">+${(m.taxa*100).toFixed(0)}% de taxa</p>` : '<p class="text-xs text-neutral-400">Sem taxa</p>'}
+          </div>
+          <svg class="w-4 h-4 text-neutral-300 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      `).join('');
+    }
+
+    // ─── SELECIONA MEIO ──────────────────────────────────────────────────────────
+    function selecionarMeio(id) {
+      metodoAtivo = METODOS.find(m => m.id === id);
+
+      // oculta lista de meios
+      document.getElementById('secaoMeios').classList.add('hidden');
+
+      // preenche formulário
+      document.getElementById('formularioIcone').textContent  = metodoAtivo.icone;
+      document.getElementById('formularioTitulo').textContent = metodoAtivo.label;
+      document.getElementById('campoValor').value = '';
+
+      const infoTaxa = document.getElementById('infoTaxa');
+      const taxaEl   = document.getElementById('formularioTaxa');
+      if (metodoAtivo.taxa > 0) {
+        taxaEl.textContent = `+${(metodoAtivo.taxa*100).toFixed(0)}% de taxa sobre o valor`;
+        taxaEl.classList.remove('hidden');
+        infoTaxa.classList.remove('hidden');
+      } else {
+        taxaEl.classList.add('hidden');
+        infoTaxa.classList.add('hidden');
+      }
+
+      // troco
+      const trocoDiv = document.getElementById('campoDinheiroTroco');
+      trocoDiv.classList.toggle('hidden', !metodoAtivo.troco);
+      document.getElementById('campoTrocoForm').value = '';
+      document.getElementById('trocoValor').textContent = '—';
+
+      // campos extras
+      renderizarCamposExtras();
+
+      atualizarBotaoAdicionar();
+      document.getElementById('secaoFormulario').classList.remove('hidden');
+    }
+
+    // ─── CAMPOS EXTRAS ───────────────────────────────────────────────────────────
+    function renderizarCamposExtras() {
+      const container = document.getElementById('camposExtras');
+      if (!metodoAtivo.campos.length) { container.innerHTML = ''; return; }
+
+      const campos   = metodoAtivo.campos;
+      let html = '';
+      let i = 0;
+      while (i < campos.length) {
+        const c = campos[i];
+        const prox = campos[i + 1];
+        if (c.half && prox?.half) {
+          html += `<div class="grid grid-cols-2 gap-3">${renderCampo(c)}${renderCampo(prox)}</div>`;
+          i += 2;
+        } else {
+          html += `<div>${renderCampo(c)}</div>`;
+          i++;
+        }
+      }
+      container.innerHTML = html;
+    }
+
+    function renderCampo(c) {
+      if (c.type === 'select') return `
+        <div class="space-y-1.5">
+          <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">${c.label}</label>
+          <div class="relative">
+            <select name="extra-${c.name}" class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 bg-white appearance-none cursor-pointer pr-8">
+              ${c.opcoes.map(o => `<option>${o}</option>`).join('')}
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg class="w-4 h-4 text-neutral-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.5 4.25a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>`;
+
+      return `
+        <div class="space-y-1.5">
+          <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">${c.label}</label>
+          <input name="extra-${c.name}" type="${c.type}" placeholder="${c.placeholder || ''}"
+            ${c.mask ? `oninput="aplicarMascara(this,'${c.mask}')"` : ''}
+            class="field-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white" />
+        </div>`;
+    }
+
+    // ─── MÁSCARAS ────────────────────────────────────────────────────────────────
+    function aplicarMascara(input, mask) {
+      if (mask === 'cartao') {
+        let v = input.value.replace(/\D/g, '').slice(0, 16);
+        input.value = v.replace(/(.{4})/g, '$1 ').trim();
+      }
+      if (mask === 'validade') {
+        let v = input.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
+        input.value = v;
+      }
+    }
+
+    // ─── VALOR NO FORMULÁRIO ─────────────────────────────────────────────────────
+    function atualizarValorForm() {
+      const val  = parseFloat(document.getElementById('campoValor').value) || 0;
+      const taxa = metodoAtivo?.taxa || 0;
+      const infoTaxa = document.getElementById('infoTaxa');
+      if (taxa > 0 && val > 0) {
+        infoTaxa.textContent = `Com taxa: ${fmt(val * (1 + taxa))}`;
+        infoTaxa.classList.remove('hidden');
+      } else {
+        infoTaxa.classList.add('hidden');
+      }
+      calcularTrocoForm();
+      atualizarBotaoAdicionar();
+    }
+
+    function preencherRestanteForm() {
+      document.getElementById('campoValor').value = restante().toFixed(2);
+      atualizarValorForm();
+    }
+
+    function calcularTrocoForm() {
+      const pago  = parseFloat(document.getElementById('campoTrocoForm').value) || 0;
+      const valor = parseFloat(document.getElementById('campoValor').value) || 0;
+      document.getElementById('trocoValor').textContent = pago > 0 ? fmt(Math.max(0, pago - valor)) : '—';
+    }
+
+    function atualizarBotaoAdicionar() {
+      const val = parseFloat(document.getElementById('campoValor').value) || 0;
+      const btn = document.getElementById('botaoAdicionarMeio');
+      const taxa = metodoAtivo?.taxa || 0;
+      document.getElementById('botaoAdicionarTexto').textContent =
+        val > 0 ? `Adicionar ${fmt(val)}${taxa > 0 ? ` (+${fmt(val * taxa)})` : ''}` : 'Adicionar';
+    }
+
+    // ─── CONFIRMAR PAGAMENTO ─────────────────────────────────────────────────────
+    function confirmarPagamento() {
+      const val = parseFloat(document.getElementById('campoValor').value) || 0;
+      if (val <= 0) return;
+
+      pagamentosAdicionados.push({
+        metodoId: metodoAtivo.id,
+        valor: val,
+        taxa: metodoAtivo.taxa,
+      });
+
+      metodoAtivo = null;
+      document.getElementById('secaoFormulario').classList.add('hidden');
+      document.getElementById('campoValor').value = '';
+
+      renderizarAdicionados();
+      atualizarResumo();
+
+      // se ainda resta valor, mostra lista novamente
+      if (restante() > 0.01) {
+        document.getElementById('secaoMeios').classList.remove('hidden');
+      }
+    }
+
+    // ─── CANCELAR ────────────────────────────────────────────────────────────────
+    function cancelarForm() {
+      metodoAtivo = null;
+      document.getElementById('secaoFormulario').classList.add('hidden');
+      document.getElementById('campoValor').value = '';
+      document.getElementById('secaoMeios').classList.remove('hidden');
+    }
+
+    // ─── RENDERIZA ADICIONADOS ───────────────────────────────────────────────────
+    function renderizarAdicionados() {
+      const secao = document.getElementById('secaoAdicionados');
+      const lista = document.getElementById('listaAdicionados');
+
+      if (pagamentosAdicionados.length === 0) {
+        secao.classList.add('hidden');
+        return;
+      }
+      secao.classList.remove('hidden');
+
+      lista.innerHTML = pagamentosAdicionados.map((p, idx) => {
+        const m = METODOS.find(m => m.id === p.metodoId);
+        const comTaxa = p.valor * (1 + p.taxa);
+        return `
+        <div name="pagamento-adicionado-${idx}" class="pagamento-adicionado rounded-xl px-4 py-3 flex items-center gap-3">
+          <span class="text-lg shrink-0">${m.icone}</span>
+          <div class="flex-1 min-w-0">
+            <p name="pagamento-adicionado-${idx}-metodo" class="text-sm font-medium text-neutral-800">${m.label}</p>
+            <p name="pagamento-adicionado-${idx}-valor" class="text-xs text-neutral-400">
+              ${fmt(p.valor)}${p.taxa > 0 ? ` → ${fmt(comTaxa)} c/ taxa` : ''}
+            </p>
+          </div>
+          <button onclick="removerAdicionado(${idx})" class="cursor-pointer text-neutral-300 hover:text-neutral-600 text-xl leading-none transition-colors shrink-0">×</button>
+        </div>`;
+      }).join('');
+    }
+
+    function removerAdicionado(idx) {
+      pagamentosAdicionados.splice(idx, 1);
+      renderizarAdicionados();
+      atualizarResumo();
+      // garante que lista de meios aparece se restou valor
+      if (restante() > 0.01) {
+        document.getElementById('secaoMeios').classList.remove('hidden');
+      }
+    }
+
+    // ─── ATUALIZA RESUMO ─────────────────────────────────────────────────────────
+    function atualizarResumo() {
+      const r = restante();
+      document.getElementById('totalRestante').textContent = fmt(r);
+      document.getElementById('totalRestante').className =
+        `text-xl font-semibold mt-0.5 ${r < 0.01 ? 'text-green-600' : 'text-neutral-800'}`;
+
+      // botão finalizar aparece só quando coberto
+      const secFinal = document.getElementById('secaoFinalizar');
+      if (r < 0.01 && pagamentosAdicionados.length > 0) {
+        secFinal.classList.remove('hidden');
+        document.getElementById('botaoFinalizarTotal').textContent = `· ${fmt(totalComTaxas())}`;
+        document.getElementById('secaoMeios').classList.add('hidden');
+      } else {
+        secFinal.classList.add('hidden');
+      }
+    }
+
+    // ─── FINALIZAR ───────────────────────────────────────────────────────────────
+    function finalizarPedido() {
+      const resumo = pagamentosAdicionados.map(p => {
+        const m = METODOS.find(m => m.id === p.metodoId);
+        return `${m.label}: ${fmt(p.valor)}`;
+      }).join('\n');
+      alert(`✓ Pedido finalizado!\n\n${resumo}\n\nTotal com taxas: ${fmt(totalComTaxas())}`);
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    document.getElementById('totalPedido').textContent  = fmt(TOTAL_PEDIDO);
+    document.getElementById('totalRestante').textContent = fmt(TOTAL_PEDIDO);
+    renderizarMeios();
+  </script>
+
+</body>
+</html>

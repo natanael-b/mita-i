@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloco – Item Combo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-[#F4F4F4] min-h-screen flex items-center justify-center p-4 md:p-8">
+
+  <section name="bloco-item-combo" class="bg-white border border-[#EBEBEB] w-full max-w-4xl rounded-2xl overflow-hidden shadow-sm">
+
+    <div name="imagem-topo" class="relative w-full h-56 md:h-72 overflow-hidden bg-[#E8E8E8]">
+      <img name="imagem-topo-src" src="https://placehold.co/800x500/DDDDDD/999999?text=Foto+do+Combo" alt="Foto do combo" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="p-6 md:p-8 space-y-6">
+
+      <div name="cabecalho-item">
+        <h1 name="item-nome" class="text-xl font-semibold text-neutral-800">Combo Família</h1>
+        <p name="item-subtitulo" class="text-sm text-neutral-400 mt-0.5">Monte seu combo passo a passo</p>
+      </div>
+
+      <div name="item-descricao" class="text-sm text-neutral-600 leading-relaxed">
+        <p name="item-descricao-paragrafo-1">Escolha cada item do combo nas etapas abaixo. Este campo aceita <strong class="font-medium text-neutral-700">HTML rico</strong>.</p>
+      </div>
+
+      <hr class="border-neutral-100" />
+
+      <!-- NAVEGAÇÃO DE ETAPAS -->
+      <div name="secao-etapas">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium mb-3">Etapas</p>
+        <div name="etapas-nav" class="flex gap-2 overflow-x-auto pb-1" style="-ms-overflow-style:none;scrollbar-width:none;">
+          <button name="etapa-nav-1" onclick="irEtapa(0)" class="etapa-btn ativa cursor-pointer shrink-0 rounded-full px-4 py-2 text-xs font-medium">1. Prato</button>
+          <button name="etapa-nav-2" onclick="irEtapa(1)" class="etapa-btn cursor-pointer shrink-0 rounded-full px-4 py-2 text-xs font-medium text-neutral-500">2. Acompanhamento</button>
+          <button name="etapa-nav-3" onclick="irEtapa(2)" class="etapa-btn cursor-pointer shrink-0 rounded-full px-4 py-2 text-xs font-medium text-neutral-500">3. Bebida</button>
+          <button name="etapa-nav-4" onclick="irEtapa(3)" class="etapa-btn cursor-pointer shrink-0 rounded-full px-4 py-2 text-xs font-medium text-neutral-500">4. Sobremesa</button>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DAS ETAPAS -->
+      <div name="etapas-conteudo">
+
+        <!-- ETAPA 1: PRATO -->
+        <div name="etapa-1" id="etapa-0" class="space-y-2">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Escolha o prato principal</p>
+          <div class="space-y-2">
+            <label name="etapa-1-opcao-1" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-prato" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 0)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-1-opcao-1-nome" class="text-sm font-medium text-neutral-800">Frango Grelhado</p>
+                <p name="etapa-1-opcao-1-detalhe" class="text-xs text-neutral-400">Peito de frango temperado na brasa</p>
+              </div>
+              <p name="etapa-1-opcao-1-preco" class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-1-opcao-2" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-prato" class="hidden" value="5" data-preco="5" onchange="selecionarOpcao(this, 0)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-1-opcao-2-nome" class="text-sm font-medium text-neutral-800">Picanha na Brasa</p>
+                <p name="etapa-1-opcao-2-detalhe" class="text-xs text-neutral-400">200g de picanha ao ponto</p>
+              </div>
+              <p name="etapa-1-opcao-2-preco" class="text-xs text-neutral-500 shrink-0">+ R$ 5,00</p>
+            </label>
+            <label name="etapa-1-opcao-3" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-prato" class="hidden" value="3" data-preco="3" onchange="selecionarOpcao(this, 0)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-1-opcao-3-nome" class="text-sm font-medium text-neutral-800">Salmão ao Forno</p>
+                <p name="etapa-1-opcao-3-detalhe" class="text-xs text-neutral-400">Filé de salmão com ervas</p>
+              </div>
+              <p name="etapa-1-opcao-3-preco" class="text-xs text-neutral-500 shrink-0">+ R$ 3,00</p>
+            </label>
+          </div>
+        </div>
+
+        <!-- ETAPA 2: ACOMPANHAMENTO -->
+        <div name="etapa-2" id="etapa-1" class="space-y-2 hidden">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Escolha o acompanhamento</p>
+          <div class="space-y-2">
+            <label name="etapa-2-opcao-1" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-acomp" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 1)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-2-opcao-1-nome" class="text-sm font-medium text-neutral-800">Arroz e Feijão</p>
+                <p name="etapa-2-opcao-1-detalhe" class="text-xs text-neutral-400">Arroz branco e feijão carioca</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-2-opcao-2" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-acomp" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 1)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-2-opcao-2-nome" class="text-sm font-medium text-neutral-800">Batata Frita</p>
+                <p name="etapa-2-opcao-2-detalhe" class="text-xs text-neutral-400">Porção crocante de batata palito</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-2-opcao-3" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-acomp" class="hidden" value="2" data-preco="2" onchange="selecionarOpcao(this, 1)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-2-opcao-3-nome" class="text-sm font-medium text-neutral-800">Purê de Mandioquinha</p>
+                <p name="etapa-2-opcao-3-detalhe" class="text-xs text-neutral-400">Cremoso, com manteiga e salsinha</p>
+              </div>
+              <p name="etapa-2-opcao-3-preco" class="text-xs text-neutral-500 shrink-0">+ R$ 2,00</p>
+            </label>
+          </div>
+        </div>
+
+        <!-- ETAPA 3: BEBIDA -->
+        <div name="etapa-3" id="etapa-2" class="space-y-2 hidden">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Escolha a bebida</p>
+          <div class="space-y-2">
+            <label name="etapa-3-opcao-1" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-bebida" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 2)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-3-opcao-1-nome" class="text-sm font-medium text-neutral-800">Suco Natural</p>
+                <p name="etapa-3-opcao-1-detalhe" class="text-xs text-neutral-400">Laranja, limão ou maracujá</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-3-opcao-2" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-bebida" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 2)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-3-opcao-2-nome" class="text-sm font-medium text-neutral-800">Refrigerante 350ml</p>
+                <p name="etapa-3-opcao-2-detalhe" class="text-xs text-neutral-400">Coca, Guaraná ou Sprite</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-3-opcao-3" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-bebida" class="hidden" value="4" data-preco="4" onchange="selecionarOpcao(this, 2)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-3-opcao-3-nome" class="text-sm font-medium text-neutral-800">Cerveja Artesanal</p>
+                <p name="etapa-3-opcao-3-detalhe" class="text-xs text-neutral-400">IPA ou Witbier 350ml</p>
+              </div>
+              <p name="etapa-3-opcao-3-preco" class="text-xs text-neutral-500 shrink-0">+ R$ 4,00</p>
+            </label>
+          </div>
+        </div>
+
+        <!-- ETAPA 4: SOBREMESA -->
+        <div name="etapa-4" id="etapa-3" class="space-y-2 hidden">
+          <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Escolha a sobremesa</p>
+          <div class="space-y-2">
+            <label name="etapa-4-opcao-1" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-sobremesa" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 3)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-4-opcao-1-nome" class="text-sm font-medium text-neutral-800">Pudim de Leite</p>
+                <p name="etapa-4-opcao-1-detalhe" class="text-xs text-neutral-400">Receita tradicional da casa</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-4-opcao-2" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-sobremesa" class="hidden" value="0" data-preco="0" onchange="selecionarOpcao(this, 3)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-4-opcao-2-nome" class="text-sm font-medium text-neutral-800">Mousse de Chocolate</p>
+                <p name="etapa-4-opcao-2-detalhe" class="text-xs text-neutral-400">Cremoso, com calda quente</p>
+              </div>
+              <p class="text-xs text-neutral-400 shrink-0">incluso</p>
+            </label>
+            <label name="etapa-4-opcao-3" class="opcao-item cursor-pointer flex items-center gap-3 rounded-xl px-4 py-3">
+              <input type="radio" name="etapa-sobremesa" class="hidden" value="3" data-preco="3" onchange="selecionarOpcao(this, 3)" />
+              <div class="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-neutral-800 hidden radio-dot"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p name="etapa-4-opcao-3-nome" class="text-sm font-medium text-neutral-800">Brownie com Sorvete</p>
+                <p name="etapa-4-opcao-3-detalhe" class="text-xs text-neutral-400">Brownie quente com sorvete de creme</p>
+              </div>
+              <p name="etapa-4-opcao-3-preco" class="text-xs text-neutral-500 shrink-0">+ R$ 3,00</p>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- NAVEGAÇÃO ANTERIOR / PRÓXIMO -->
+      <div name="etapas-navegacao" class="flex gap-3">
+        <button name="btn-anterior" id="btnAnterior" onclick="navEtapa(-1)" class="cursor-pointer flex-1 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors hidden">← Anterior</button>
+        <button name="btn-proximo" id="btnProximo" onclick="navEtapa(1)" class="cursor-pointer flex-1 bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">Próximo →</button>
+      </div>
+
+      <hr class="border-neutral-100" id="hrQuantidade" />
+
+      <!-- QUANTIDADE -->
+      <div name="secao-quantidade" id="secaoQuantidade" class="space-y-3 hidden">
+        <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Quantidade</p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex gap-1.5">
+            <button onclick="selecionarPreset(this, 1)" class="qty-preset ativo cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">1</button>
+            <button onclick="selecionarPreset(this, 2)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">2</button>
+            <button onclick="selecionarPreset(this, 3)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">3</button>
+            <button onclick="selecionarPreset(this, 4)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">4</button>
+            <button onclick="selecionarPreset(this, 5)" class="qty-preset cursor-pointer w-9 h-9 rounded-xl text-sm font-medium text-neutral-700">5</button>
+          </div>
+          <span class="text-neutral-200 text-sm select-none">|</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="ajustar(-1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">−</button>
+            <input name="quantidade-valor" id="quantidadeValor" type="number" min="1" value="1" oninput="atualizarPorInput(this)" class="w-12 h-9 text-center text-sm font-medium text-neutral-800 border border-[#E8E8E8] rounded-xl focus:outline-none focus:border-neutral-400 bg-white" />
+            <button onclick="ajustar(1)" class="qty-btn cursor-pointer w-9 h-9 rounded-xl text-neutral-600 text-lg font-light flex items-center justify-center">+</button>
+          </div>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- OBSERVAÇÕES -->
+        <div name="secao-observacoes" class="space-y-2">
+          <label class="block text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Observações</label>
+          <textarea name="observacoes-input" rows="2" placeholder="Ex: sem cebola, bem passado..." class="obs-input w-full rounded-xl px-4 py-2.5 text-sm text-neutral-700 placeholder-neutral-300 bg-white"></textarea>
+        </div>
+
+        <hr class="border-neutral-100" />
+
+        <!-- PREÇO FINAL -->
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-neutral-400 font-medium">Total</p>
+            <p name="item-preco-final" id="precoFinal" class="text-2xl font-semibold text-neutral-800 mt-0.5">R$ 42,90</p>
+          </div>
+          <p id="precoDetalhe" class="text-xs text-neutral-400 text-right"></p>
+        </div>
+
+        <button name="botao-carrinho" type="button" onclick="adicionarCarrinho()" class="cursor-pointer w-full bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <span>🛒</span>
+          <span>Adicionar ao carrinho</span>
+          <span id="botaoPreco" class="opacity-60 font-normal"></span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    const precoBase = 42.90;
+    const totalEtapas = 4;
+    let etapaAtual = 0;
+    let quantidade = 1;
+    let extrasEtapas = [0, 0, 0, 0]; // extra por etapa
+
+    function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    function irEtapa(index) {
+      document.getElementById(`etapa-${etapaAtual}`).classList.add('hidden');
+      etapaAtual = index;
+      document.getElementById(`etapa-${etapaAtual}`).classList.remove('hidden');
+
+      // nav buttons
+      const navs = document.querySelectorAll('[name^="etapa-nav-"]');
+      navs.forEach((b, i) => {
+        b.classList.remove('ativa', 'concluida');
+        if (i === etapaAtual) b.classList.add('ativa');
+        else if (i < etapaAtual) b.classList.add('concluida');
+      });
+
+      document.getElementById('btnAnterior').classList.toggle('hidden', etapaAtual === 0);
+
+      const isUltima = etapaAtual === totalEtapas - 1;
+      const btnProx = document.getElementById('btnProximo');
+      btnProx.textContent = isUltima ? 'Confirmar ✓' : 'Próximo →';
+
+      if (isUltima) {
+        btnProx.onclick = concluirEtapas;
+      } else {
+        btnProx.onclick = () => navEtapa(1);
+      }
+    }
+
+    function navEtapa(dir) {
+      const nova = Math.max(0, Math.min(totalEtapas - 1, etapaAtual + dir));
+      irEtapa(nova);
+    }
+
+    function concluirEtapas() {
+      document.getElementById('btnAnterior').classList.add('hidden');
+      document.getElementById('btnProximo').classList.add('hidden');
+      document.getElementById('secaoQuantidade').classList.remove('hidden');
+      atualizarPreco();
+    }
+
+    function selecionarOpcao(input, etapaIdx) {
+      extrasEtapas[etapaIdx] = parseFloat(input.getAttribute('data-preco')) || 0;
+      const labels = input.closest('.space-y-2').querySelectorAll('label');
+      labels.forEach(l => {
+        l.classList.remove('selecionada');
+        l.querySelector('.radio-dot').classList.add('hidden');
+      });
+      input.closest('label').classList.add('selecionada');
+      input.closest('label').querySelector('.radio-dot').classList.remove('hidden');
+      atualizarPreco();
+    }
+
+    function calcularPreco() {
+      return (precoBase + extrasEtapas.reduce((a, b) => a + b, 0)) * quantidade;
+    }
+
+    function atualizarPreco() {
+      const unit = precoBase + extrasEtapas.reduce((a, b) => a + b, 0);
+      const total = unit * quantidade;
+      document.getElementById('precoFinal').textContent = fmt(total);
+      document.getElementById('precoDetalhe').textContent = quantidade > 1 ? `${quantidade} × ${fmt(unit)}` : '';
+      document.getElementById('botaoPreco').textContent = `· ${fmt(total)}`;
+    }
+
+    function selecionarPreset(btn, val) {
+      quantidade = val;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === val));
+      document.getElementById('quantidadeValor').value = val;
+      atualizarPreco();
+    }
+
+    function ajustar(delta) {
+      quantidade = Math.max(1, quantidade + delta);
+      document.getElementById('quantidadeValor').value = quantidade;
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('ativo', parseInt(b.textContent) === quantidade));
+      atualizarPreco();
+    }
+
+    function atualizarPorInput(input) {
+      const val = parseInt(input.value);
+      if (!isNaN(val) && val >= 1) { quantidade = val; atualizarPreco(); }
+    }
+
+    function adicionarCarrinho() {
+      alert(`✓ Combo adicionado!\nTotal: ${fmt(calcularPreco())}`);
+    }
+  </script>
+
+</body>
+</html>
