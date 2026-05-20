@@ -1,0 +1,3659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Editor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+  * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+  :root {
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --purple-mid: #a78bfa;
+    --gray-bg: #f5f5f7;
+    --border: #e4e4e7;
+    --text: #18181b;
+    --muted: #71717a;
+  }
+
+  body { background: var(--gray-bg); color: var(--text); margin: 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+
+  /* Tabs */
+  .tab-btn { position: relative; padding: 6px 4px; color: var(--muted); transition: color .2s; cursor: pointer; }
+  .tab-btn.active { color: var(--purple); }
+  .tab-btn.active::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:var(--purple); border-radius:2px 2px 0 0; }
+  .tab-btn:hover { color: var(--text); }
+
+  /* Panel */
+  .panel { background:#fff; border-right:1px solid var(--border); }
+  .right-panel { background:#fff; border-left:1px solid var(--border); }
+
+  /* Block cards in left panel */
+  .block-card {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; padding:12px 8px; border-radius:10px; cursor:grab; border:1px solid var(--border);
+    background:#fff; transition: all .15s; font-size:11px; font-weight:500; color:var(--muted);
+    text-align:center; user-select:none;
+  }
+  .block-card:hover { border-color:var(--purple-mid); color:var(--purple); background:var(--purple-light); transform:translateY(-1px); box-shadow:0 4px 12px rgba(124,58,237,.1); }
+  .block-card:active { cursor:grabbing; }
+  .block-card .icon-wrap { width:36px;height:36px; display:flex;align-items:center;justify-content:center; }
+
+  /* Drop zone */
+  .drop-zone {
+    border:2px dashed transparent; border-radius:8px; transition:all .2s;
+    min-height:60px;
+  }
+  .drop-zone.drag-over { border-color:var(--purple); background:var(--purple-light); }
+
+  /* App item in organize */
+  .app-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    background:#fff; border:1px solid var(--border); border-radius:8px;
+    cursor:default; transition: box-shadow .15s;
+  }
+  .app-item:hover { box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .app-item .drag-handle { cursor:grab; color:var(--muted); }
+  .app-item .drag-handle:active { cursor:grabbing; }
+
+  /* Nested group */
+  .group-children { padding-left:28px; margin-top:4px; display:flex; flex-direction:column; gap:4px; }
+  .canvas-group-children { margin-top:4px; display:flex; flex-direction:column; gap:4px; border-left:2px solid var(--border); margin-left:12px; padding-left:8px; }
+
+  /* Input fields */
+  .field-input {
+    width:100%; border:1px solid var(--border); border-radius:8px;
+    padding:9px 12px; font-size:13px; color:var(--text); outline:none; transition:border-color .15s;
+    background:#fafafa;
+  }
+  .field-input:focus { border-color:var(--purple); background:#fff; }
+  .field-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+
+  /* Btn */
+  .btn-primary {
+    background:var(--purple); color:#fff; border:none; border-radius:8px; padding:10px 20px;
+    font-size:13px; font-weight:600; cursor:pointer; transition:opacity .15s; width:100%;
+  }
+  .btn-primary:hover { opacity:.9; }
+  .btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+
+  /* Selected block highlight */
+  .block-selected { border-color:var(--purple) !important; box-shadow:0 0 0 3px rgba(124,58,237,.15); }
+
+  /* Sections */
+  .section-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+
+  /* Image upload area */
+  .img-upload {
+    border:1.5px dashed var(--border); border-radius:8px; padding:16px;
+    display:flex; align-items:center; gap:12px; cursor:pointer; transition:all .15s;
+    background:#fafafa;
+  }
+  .img-upload:hover { border-color:var(--purple); background:var(--purple-light); }
+
+  /* Badge */
+  .badge-novo { background:#7c3aed; color:#fff; font-size:9px; font-weight:700; letter-spacing:.05em; padding:2px 5px; border-radius:4px; }
+
+  /* Sortable ghost */
+  .sortable-ghost { opacity:.4; background:#ede9fe !important; border-color:#a78bfa !important; }
+
+  /* Transition panels */
+  .tab-content { display:none; }
+  .tab-content.active { display:flex; flex:1; overflow:hidden; }
+
+  /* Scrollable areas */
+  .scroll-y { overflow-y:auto; }
+
+  /* Tooltip */
+  [data-tip] { position:relative; }
+  [data-tip]:hover::after {
+    content:attr(data-tip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%);
+    background:#18181b; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; white-space:nowrap; z-index:99;
+  }
+
+  /* Dot indicator */
+  .dot { width:8px;height:8px;border-radius:50%; display:inline-block; }
+
+  /* Collapsed group children */
+  .group-children.collapsed { display:none; }
+
+  /* Organize */
+  .indent-btn { opacity:0; transition:opacity .15s; }
+  .app-item:hover .indent-btn { opacity:1; }
+  .indent-btn:hover { background:var(--purple-light) !important; color:var(--purple) !important; }
+
+  /* Drag drop indicator */
+  .drop-indicator {
+    height: 2px; background: var(--purple); border-radius: 2px;
+    position: fixed; pointer-events: none; z-index: 9998; transition: top .05s, left .05s;
+  }
+  .drop-indicator.hidden { display: none; }
+  .drop-indicator::before {
+    content:''; position:absolute; left:-4px; top:-3px;
+    width:8px; height:8px; border-radius:50%; background:var(--purple);
+  }
+  .org-group-hover { outline: 2px solid var(--purple) !important; outline-offset: -2px; background: var(--purple-light) !important; border-radius: 8px; }
+
+  /* Three-dot menu */
+  .ctx-menu { position:absolute; right:0; top:100%; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.1); z-index:100; min-width:140px; overflow:hidden; }
+  .ctx-menu-item { padding:9px 14px; font-size:13px; cursor:pointer; color:var(--text); transition:background .1s; }
+  .ctx-menu-item:hover { background:#f4f4f5; }
+  .ctx-menu-item.danger { color:#ef4444; }
+
+  /* Color palette */
+  .color-palette { display:flex;flex-wrap:wrap;gap:6px; }
+  .color-swatch { width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .15s;flex-shrink:0; }
+  .color-swatch:hover { transform:scale(1.15); }
+  .color-swatch.selected { border-color:#fff;outline:2px solid var(--purple);outline-offset:1px; }
+
+  /* Page editor */
+  .pe-add-btn { display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:all .15s; }
+  .pe-add-btn:hover { border-color:var(--purple-mid);color:var(--purple);background:var(--purple-light); }
+  .pe-section { background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:box-shadow .15s;flex-shrink:0; }
+  .pe-section:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  .pe-section-header { display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);background:#fafafa; }
+  .pe-section-body { padding:12px; }
+  .pe-drag-handle { cursor:grab;color:var(--muted);flex-shrink:0; }
+  .pe-drag-handle:active { cursor:grabbing; }
+  .pe-section-type { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);flex:1; }
+  .pe-remove-btn { padding:3px;border-radius:5px;color:var(--muted);cursor:pointer;transition:color .15s; }
+  .pe-remove-btn:hover { color:#ef4444; }
+  .pe-style-row { display:flex;gap:6px;margin-top:8px;flex-wrap:wrap; }
+  .pe-style-row select, .pe-style-row input[type=color] { border:1px solid var(--border);border-radius:6px;font-size:11px;padding:3px 6px;background:#fff;cursor:pointer; }
+  .pe-style-row input[type=color] { width:32px;height:28px;padding:2px;cursor:pointer; }
+  .pe-style-label { font-size:10px;color:var(--muted);align-self:center;white-space:nowrap; }
+
+  /* Toggle switch */
+  .switch-row { display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--border); }
+  .switch-row:last-child { border-bottom:none; }
+  .toggle-wrap { position:relative;flex-shrink:0; }
+  .toggle-wrap input { position:absolute;opacity:0;width:0;height:0; }
+  .toggle-track {
+    display:flex;
+    align-items:center;
+    width:36px;
+    height:20px;
+    border-radius:10px;
+    background:#d4d4d8;
+    transition:background .2s;
+    cursor:pointer;
+  }
+  .toggle-wrap input:checked + .toggle-track { background:var(--purple); }
+  .toggle-thumb {
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#fff;
+    margin-left:2px;
+    transition:transform .2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle-wrap input:checked + .toggle-track .toggle-thumb { transform:translateX(16px); }
+
+  /* HTML Editor Modal */
+  .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto; }
+  .modal-box { background:#fff;border-radius:14px;width:100%;max-width:680px;max-height:none;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.2);margin:auto;overflow:hidden; }
+  .modal-header { padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0; }
+  .modal-body { flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0; }
+  .modal-footer { padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0; }
+
+  /* Toolbar */
+  .editor-toolbar { display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0; }
+  .toolbar-btn { padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);transition:all .15s;line-height:1; }
+  .toolbar-btn:hover { background:var(--purple-light);border-color:var(--purple-mid);color:var(--purple); }
+  .toolbar-btn.active { background:var(--purple);color:#fff;border-color:var(--purple); }
+
+  /* Editable area */
+  .html-editable { flex:1;padding:16px;outline:none;overflow-y:auto;font-size:14px;line-height:1.6;color:var(--text); }
+  .html-editable h1 { font-size:1.6em;font-weight:700;margin:.4em 0; }
+  .html-editable h2 { font-size:1.3em;font-weight:700;margin:.4em 0; }
+  .html-editable h3 { font-size:1.1em;font-weight:600;margin:.4em 0; }
+  .html-editable b, .html-editable strong { font-weight:700; }
+  .html-editable a { color:var(--purple);text-decoration:underline; }
+  .html-editable ul { list-style:disc;padding-left:1.4em;margin:.3em 0; }
+  .html-editable ol { list-style:decimal;padding-left:1.4em;margin:.3em 0; }
+  .html-editable li { margin:.15em 0; }
+
+  /* Profile photo preview in panel */
+  .profile-photo-wrap { position:relative;width:56px;height:56px;flex-shrink:0; }
+  .profile-photo-wrap img { width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border); }
+  .profile-photo-wrap .remove-photo { position:absolute;top:-4px;right:-4px;width:18px;height:18px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:10px;border:2px solid #fff; }
+</style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- TOP HEADER -->
+<header class="bg-white border-b flex items-center px-4 h-14 shrink-0 gap-4" style="border-color:var(--border)">
+  <button class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-1" style="color:var(--muted)" onclick="location.reload();">
+    <i data-lucide="file-plus-corner" class="w-4 h-4"></i> Novo
+  </button>
+  <button class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-1" style="color:var(--muted)" onclick="openApp();">
+    <i data-lucide="folder-open" class="w-4 h-4"></i> Abrir
+  </button>
+  <button class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-1" style="color:var(--muted)" onclick="exportApp();">
+    <i data-lucide="file-down" class="w-4 h-4"></i> Exportar
+  </button>
+
+  <!-- Center tabs -->
+  <div class="flex-1 flex justify-center">
+    <div class="flex gap-1 border-b-0" style="gap:2px">
+      <button class="tab-btn active flex flex-col items-center gap-1 px-5" data-tab="settings">
+        <i data-lucide="info" class="w-4 h-4"></i>
+      </button>
+      <button class="tab-btn flex flex-col items-center gap-1 px-5" data-tab="content">
+        <i data-lucide="layers" class="w-4 h-4"></i>
+      </button>
+      <button class="tab-btn flex flex-col items-center gap-1 px-5" data-tab="gallery">
+        <i data-lucide="layout-list" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button class="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" style="background:var(--purple-light);color:var(--purple)" onclick="buildApp()">
+      <i data-lucide="hammer" class="w-4 h-4"></i> Construir
+    </button>
+  </div>
+</header>
+
+<!-- MAIN AREA -->
+<main class="flex flex-1 overflow-hidden">
+
+  <!-- ═══════════════════════════════ TAB 1: SETTINGS ═══════════════════════════════ -->
+  <div class="tab-content active" id="tab-settings" style="width:100%">
+    <div class="w-80 shrink-0 panel scroll-y p-6 flex flex-col gap-5">
+      <div>
+        <p class="section-title">Informações do App</p>
+        <div class="flex flex-col gap-4">
+          <div>
+            <p class="field-label">Nome do app *</p>
+            <input class="field-input" type="text" placeholder="Nome do app" maxlength="30" id="app-name" value="" oninput="appState.settings.name = this.value; commit()">
+            <p class="text-xs mt-1" style="color:var(--muted)">Máximo 30 caracteres</p>
+          </div>
+          <div>
+            <p class="field-label">Categoria *</p>
+            <select class="field-input" id="app-category" onchange="appState.settings.category = this.value; commit()">
+              <option value="">Selecione a categoria</option>
+              <option>Negócios</option><option>Educação</option><option>Entretenimento</option>
+              <option>Saúde</option><option>Lifestyle</option><option>Produtividade</option>
+              <option>Serviços</option><option>Outros</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-title">Configurações de Integração</p>
+        <div class="flex flex-col gap-4">
+          <div>
+            <p class="field-label">URL do projeto Neon</p>
+            <input class="field-input" type="url" placeholder="postgres://user:pass@host/db" id="neon-url" oninput="appState.settings.neonUrl = this.value; commit()">
+          </div>
+          <div>
+            <p class="field-label">Access Token do usuário</p>
+            <div class="relative">
+              <input class="field-input pr-10" type="password" placeholder="sk-..." id="token-field" oninput="appState.settings.accessToken = this.value; commit()">
+              <button class="absolute right-3 top-1/2 -translate-y-1/2" onclick="toggleToken()" style="color:var(--muted)">
+                <i data-lucide="eye" class="w-4 h-4" id="token-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="field-label">URL autenticador</p>
+            <input class="field-input" type="url" placeholder="https://auth.example.com" id="auth-url" oninput="appState.settings.authUrl = this.value; commit()">
+          </div>
+          <div>
+            <p class="field-label">URL API de dados</p>
+            <input class="field-input" type="url" placeholder="https://api.example.com" id="api-url" oninput="appState.settings.apiUrl = this.value; commit()">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary mt-auto" onclick="saveSettings()">Salvar alterações</button>
+    </div>
+    <!-- center: theme customization -->
+    <div class="flex-1 scroll-y p-8" style="background:var(--gray-bg)">
+      <div class="max-w-xl mx-auto flex flex-col gap-6">
+        <div>
+          <p class="font-semibold text-base mb-1" style="color:var(--text)">Personalização visual</p>
+          <p class="text-sm" style="color:var(--muted)">Escolha as cores do seu app. A seleção é salva automaticamente.</p>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-white rounded-xl p-5 border" style="border-color:var(--border)">
+          <div class="flex items-center gap-3 mb-3">
+            <div>
+              <p class="font-medium text-sm">Cor do cabeçalho</p>
+              <p class="text-xs" style="color:var(--muted)">Barra superior do app</p>
+            </div>
+          </div>
+          <div class="color-palette" id="palette-header"></div>
+        </div>
+
+        <!-- Background -->
+        <div class="bg-white rounded-xl p-5 border" style="border-color:var(--border)">
+          <div class="flex items-center gap-3 mb-3">
+            <div>
+              <p class="font-medium text-sm">Cor do fundo da página</p>
+              <p class="text-xs" style="color:var(--muted)">Fundo geral das telas</p>
+            </div>
+          </div>
+          <div class="color-palette" id="palette-background"></div>
+        </div>
+
+        <!-- Border -->
+        <div class="bg-white rounded-xl p-5 border" style="border-color:var(--border)">
+          <div class="flex items-center gap-3 mb-3">
+            <div>
+              <p class="font-medium text-sm">Cor de bordas</p>
+              <p class="text-xs" style="color:var(--muted)">Separadores e contornos</p>
+            </div>
+          </div>
+          <div class="color-palette" id="palette-border"></div>
+        </div>
+
+        <!-- Block -->
+        <div class="bg-white rounded-xl p-5 border" style="border-color:var(--border)">
+          <div class="flex items-center gap-3 mb-3">
+            <div>
+              <p class="font-medium text-sm">Cor dos blocos</p>
+              <p class="text-xs" style="color:var(--muted)">Cartões e itens de lista</p>
+            </div>
+          </div>
+          <div class="color-palette" id="palette-block"></div>
+        </div>
+
+        <!-- Live preview strip -->
+        <div class="rounded-xl overflow-hidden border" style="border-color:var(--border)">
+          <div id="strip-header" class="flex items-center px-4 h-10 gap-2" style="background:#2c3e50">
+            <span class="w-2 h-2 rounded-full opacity-60" style="background:#fff"></span>
+            <span class="text-xs font-semibold text-white opacity-80" id="strip-name">Meu app</span>
+          </div>
+          <div id="strip-bg" class="p-3" style="background:#34495e">
+            <div id="strip-block1" class="rounded-lg px-4 py-3" style="background:#9aa4ae;border:0px solid #212e3c">
+              <hr id="strip-hr" style="border:none;border-top:1px solid #212e3c;margin:0 auto;width:60%">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ TAB 2: CONTENT ═══════════════════════════════ -->
+  <div class="tab-content" id="tab-content" style="width:100%">
+    <!-- Left: block palette -->
+    <div class="w-72 shrink-0 panel flex flex-col">
+      <div class="p-3 scroll-y flex-1">
+        <div class="grid grid-cols-2 gap-2" id="block-palette"></div>
+      </div>
+    </div>
+
+    <!-- Center: drop canvas -->
+    <div class="flex-1 flex flex-col items-center justify-start p-6 scroll-y" style="background:var(--gray-bg)">
+      <div id="canvas-breadcrumb" class="hidden items-center gap-2 w-full max-w-sm mb-2 px-1 py-1 rounded-lg" style="background:var(--purple-light)"></div>
+      <div class="text-xs font-medium mb-3 flex items-center gap-2" style="color:var(--muted)">
+        <i data-lucide="smartphone" class="w-3 h-3"></i> Arraste blocos para adicionar
+      </div>
+      <div class="w-full h-full">
+        <div id="canvas-drop" class="drop-zone flex flex-col gap-2 min-h-64 p-2 rounded-xl" style="border:2px dashed var(--border)">
+          <!-- items dropped here -->
+          <div id="canvas-empty" class="flex flex-col items-center justify-center py-16 text-center" style="color:var(--muted)">
+            <i data-lucide="layout-grid" class="w-10 h-10 mb-3 opacity-30"></i>
+            <p class="text-sm font-medium">Nenhum bloco adicionado</p>
+            <p class="text-xs mt-1">Arraste um bloco da lista para começar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: block config -->
+    <div class="w-72 shrink-0 right-panel flex flex-col" id="block-config-panel">
+      <!-- Empty state -->
+      <div class="flex-1 flex flex-col items-center justify-center gap-3 p-6" id="block-config-empty" style="color:var(--muted)">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:var(--purple-light)">
+          <i data-lucide="mouse-pointer-2" class="w-7 h-7" style="color:var(--purple-mid)"></i>
+        </div>
+        <p class="font-semibold text-sm" style="color:var(--text)">Selecione um bloco</p>
+        <p class="text-xs text-center">Clique em um bloco no canvas para configurar</p>
+      </div>
+      <!-- Config form -->
+      <div class="hidden flex-col h-full" id="block-config-form">
+        <!-- Header -->
+        <div class="p-4 border-b flex items-center gap-3" style="border-color:var(--border)">
+          <button onclick="deselectBlock()" style="color:var(--muted)">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <div class="w-6 h-6 rounded-md flex items-center justify-center shrink-0" id="config-block-icon-bg">
+              <i class="w-3.5 h-3.5" id="config-block-icon-el"></i>
+            </div>
+            <span class="font-semibold text-sm truncate" id="config-block-name">Bloco</span>
+          </div>
+          <button class="text-red-400 hover:text-red-600 transition-colors" onclick="removeSelectedBlock()">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <!-- Body -->
+        <div class="p-4 scroll-y flex-1 flex flex-col gap-5">
+          <!-- Tab title -->
+          <div>
+            <p class="section-title">Aba</p>
+            <div class="flex flex-col gap-3">
+              <div>
+                <p class="field-label">Título</p>
+                <input class="field-input" type="text" placeholder="Título da aba" maxlength="70" id="block-title">
+              </div>
+              <!-- Icon & cover uploads stay here -->
+              <div>
+                <p class="field-label">Ícone <span style="color:var(--muted);font-weight:400">(250×250px)</span></p>
+                <div class="img-upload" onclick="triggerUpload('icon-upload')">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:#f4f4f5">
+                    <i data-lucide="image" class="w-4 h-4" style="color:var(--muted)" id="icon-preview-placeholder"></i>
+                    <img id="icon-preview-img" class="hidden w-10 h-10 rounded-lg object-cover">
+                  </div>
+                  <span class="text-xs" style="color:var(--muted)">PNG, JPG · máx. 5MB</span>
+                </div>
+                <input type="file" id="icon-upload" class="hidden" accept=".png,.jpg,.jpeg" onchange="handleIconUpload(this)">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Visibility switches -->
+          <div>
+            <p class="section-title">Exibir no conteúdo</p>
+            <div class="flex flex-col gap-1">
+              <label class="switch-row">
+                <span class="text-sm">Imagem do topo</span>
+                <div class="toggle-wrap"><input type="checkbox" id="sw-bg-image" onchange="onSwitch('bgImage',this.checked)"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+              </label>
+              <label class="switch-row">
+                <span class="text-sm">Título</span>
+                <div class="toggle-wrap"><input type="checkbox" id="sw-title" onchange="onSwitch('showTitle',this.checked)"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+              </label>
+              <label class="switch-row">
+                <span class="text-sm">Subtítulo</span>
+                <div class="toggle-wrap"><input type="checkbox" id="sw-subtitle" onchange="onSwitch('showSubtitle',this.checked)"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+              </label>
+              <label class="switch-row">
+                <span class="text-sm">Introdução</span>
+                <div class="toggle-wrap"><input type="checkbox" id="sw-intro" onchange="onSwitch('showIntro',this.checked)"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex flex-col gap-2">
+            <button onclick="openContentModal()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors" style="background:var(--purple-light);color:var(--purple)">
+              <i data-lucide="layout-panel-top" class="w-4 h-4"></i> Conteúdo
+            </button>
+            <button id="btn-block-config" onclick="openBlockConfigModal()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors" style="background:#f4f4f5;color:var(--text)">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4" id="btn-block-config-icon"></i><span>Configurações do bloco</span>
+            </button>
+          </div>
+
+          <!-- Group shortcut -->
+          <div id="config-enter-group" style="display:none">
+            <button onclick="" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-colors" style="background:var(--purple-light);color:var(--purple)">
+              <i data-lucide="folder-open" class="w-4 h-4"></i> Editar grupo
+            </button>
+          </div>
+        </div>
+        <div class="p-4 border-t" style="border-color:var(--border)">
+          <button class="btn-primary" id="block-save-btn" onclick="saveSelectedBlock()">Salvar alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ TAB 3: ORGANIZE ═══════════════════════════════ -->
+  <div class="tab-content" id="tab-organize" style="width:100%">
+    <!-- Full width organize panel -->
+    <div class="flex-1 flex flex-col">
+      <div class="p-4 border-b bg-white flex items-center justify-between" style="border-color:var(--border)">
+        <span class="font-semibold text-sm">Organização de abas</span>
+        <span class="text-xs px-2 py-1 rounded-full font-medium" style="background:var(--purple-light);color:var(--purple)" id="org-count">0 de 50</span>
+      </div>
+      <div class="flex flex-1 overflow-hidden">
+        <!-- left side organize list -->
+        <div class="flex-1 p-6 scroll-y" style="background:var(--gray-bg)">
+          <div id="org-list" class="flex flex-col gap-2 max-w-2xl mx-auto"></div>
+          <div id="org-empty" class="flex flex-col items-center justify-center py-20 gap-3" style="color:var(--muted)">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:white;border:1px solid var(--border)">
+              <i data-lucide="layout-list" class="w-7 h-7 opacity-30"></i>
+            </div>
+            <p class="text-sm font-medium" style="color:var(--text)">Nenhum bloco adicionado</p>
+            <p class="text-xs">Adicione blocos na aba de Conteúdo para organizar aqui</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Dashboard Editor Modal -->
+<div id="dash-editor-modal" class="modal-overlay hidden" onclick="closeDashEditor(event)" style="align-items:center;overflow-y:hidden">
+  <div class="modal-box" style="max-width:1020px;height:90vh;min-height:500px;overflow:hidden" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:#0ea5e918;color:#0ea5e9">
+          <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i>
+        </div>
+        <span class="font-semibold text-sm" id="de-block-name">Editor de Dashboard</span>
+      </div>
+      <button onclick="closeDashEditor()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="modal-body" style="flex-direction:row;overflow:hidden;display:flex;min-height:0">
+      <!-- Left: add widget + table ref -->
+      <div class="shrink-0 flex flex-col gap-3 p-4" style="width:200px;border-right:1px solid var(--border);background:#fafafa;overflow-y:auto;min-height:0">
+        <button onclick="deAddWidget()" class="pe-add-btn justify-center">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Novo widget
+        </button>
+        <div style="height:1px;background:var(--border)"></div>
+        <div>
+          <p class="field-label">Tabela de referência</p>
+          <input class="field-input" type="text" id="de-table" placeholder="nome_da_tabela" style="font-size:12px">
+          <p class="text-xs mt-1" style="color:var(--muted)">Mesma tabela do bloco Lista</p>
+        </div>
+      </div>
+      <!-- Right: widgets list -->
+      <div class="flex-1 p-4 flex flex-col gap-4" id="de-widgets-list" style="overflow-y:auto;min-height:0">
+        <div id="de-empty" class="flex flex-col items-center justify-center py-20 gap-2" style="color:var(--muted)">
+          <i data-lucide="bar-chart-2" class="w-10 h-10 opacity-20"></i>
+          <p class="text-sm font-medium" style="color:var(--text)">Nenhum widget</p>
+          <p class="text-xs">Clique em "Novo widget" para começar</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeDashEditor()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveDashEditor()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Form Editor Modal -->
+<div id="form-editor-modal" class="modal-overlay hidden" onclick="closeFormEditor(event)" style="align-items:center;overflow-y:hidden">
+  <div class="modal-box" style="max-width:960px;height:88vh;min-height:500px;overflow:hidden" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:#6366f118;color:#6366f1">
+          <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+        </div>
+        <span class="font-semibold text-sm" id="fe-block-name">Editor de Formulário</span>
+      </div>
+      <button onclick="closeFormEditor()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="modal-body" style="flex-direction:row;overflow:hidden;display:flex;min-height:0">
+      
+      <!-- Left: field type palette -->
+      <div class="shrink-0 flex flex-col gap-1 p-3" style="width:180px;border-right:1px solid var(--border);background:#fafafa;overflow-y:auto;min-height:0">
+        <div>
+          <p class="field-label">Tabela do banco</p>
+          <input class="field-input" type="text" id="fe-table" placeholder="nome_da_tabela">
+        </div>
+        <p class="field-label mb-1">Adicionar campo</p>
+        <button class="pe-add-btn" onclick="feAddField('text')"><i data-lucide="minus" class="w-3.5 h-3.5"></i> Linha única</button>
+        <button class="pe-add-btn" onclick="feAddField('textarea')"><i data-lucide="align-left" class="w-3.5 h-3.5"></i> Várias linhas</button>
+        <button class="pe-add-btn" onclick="feAddField('number')"><i data-lucide="hash" class="w-3.5 h-3.5"></i> Número</button>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <button class="pe-add-btn" onclick="feAddField('date')"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Data</button>
+        <button class="pe-add-btn" onclick="feAddField('time')"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Hora</button>
+        <button class="pe-add-btn" onclick="feAddField('datetime')"><i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i> Data e hora</button>
+        <button class="pe-add-btn" onclick="feAddField('daterange')"><i data-lucide="calendar-range" class="w-3.5 h-3.5"></i> Intervalo data</button>
+        <button class="pe-add-btn" onclick="feAddField('timerange')"><i data-lucide="timer" class="w-3.5 h-3.5"></i> Intervalo hora</button>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <button class="pe-add-btn" onclick="feAddField('radio')"><i data-lucide="circle-dot" class="w-3.5 h-3.5"></i> Rádio / Select</button>
+        <button class="pe-add-btn" onclick="feAddField('checklist')"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> Checklist</button>
+      </div>
+      <!-- Right: fields list -->
+      <div class="flex-1 p-4 flex flex-col gap-3" id="fe-fields-list" style="overflow-y:auto;min-height:0">
+        <div id="fe-empty" class="flex flex-col items-center justify-center py-20 gap-2" style="color:var(--muted)">
+          <i data-lucide="file-text" class="w-10 h-10 opacity-20"></i>
+          <p class="text-sm font-medium" style="color:var(--text)">Formulário vazio</p>
+          <p class="text-xs text-center">Adicione campos à esquerda</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeFormEditor()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveFormEditor()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- List Editor Modal -->
+<div id="list-editor-modal" class="modal-overlay hidden" onclick="closeListEditor(event)" style="align-items:center;overflow-y:hidden">
+  <div class="modal-box" style="max-width:860px;height:85vh;min-height:500px;overflow:hidden" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:#64748b18;color:#64748b">
+          <i data-lucide="list" class="w-3.5 h-3.5"></i>
+        </div>
+        <span class="font-semibold text-sm" id="le-block-name">Editor de Lista</span>
+      </div>
+      <button onclick="closeListEditor()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="modal-body" style="flex-direction:row;overflow:hidden;display:flex;min-height:0">
+      <!-- Left: runtime settings -->
+      <div class="shrink-0 flex flex-col gap-1 p-4" style="width:220px;border-right:1px solid var(--border);background:#fafafa;overflow-y:auto;min-height:0">
+        <div class="flex flex-col gap-3">
+          <button onclick="leAddItem()" class="pe-add-btn justify-center">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Adicionar item
+          </button>
+          <div style="height:1px;background:var(--border)"></div>
+          <div>
+            <p class="field-label">Tabela do banco</p>
+            <input class="field-input" type="text" id="le-table" placeholder="nome_da_tabela">
+          </div>
+          <div>
+            <p class="field-label">Categoria no banco</p>
+            <input class="field-input" type="text" id="le-table-category" placeholder="Nome da categoria">
+          </div>
+          <div style="height:1px;background:var(--border)"></div>
+          <label class="switch-row">
+            <span class="text-sm">Modo simplificado</span>
+            <div class="toggle-wrap"><input type="checkbox" id="le-sw-simple"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+          </label>
+          <label class="switch-row">
+            <span class="text-sm">Itens estáticos no início</span>
+            <div class="toggle-wrap"><input type="checkbox" id="le-sw-static"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+          </label>
+          <label class="switch-row">
+            <span class="text-sm">Modo Grid</span>
+            <div class="toggle-wrap"><input type="checkbox" id="le-sw-grid"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+          </label>
+          <label class="switch-row">
+            <span class="text-sm">Ativar busca</span>
+            <div class="toggle-wrap"><input type="checkbox" id="le-sw-search"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+          </label>
+          <label class="switch-row">
+            <span class="text-sm">Modo plano (não clicável)</span>
+            <div class="toggle-wrap"><input type="checkbox" id="le-sw-flat"><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+          </label>
+        </div>
+      </div>
+      <!-- Right: static items list -->
+      <div class="flex-1 p-4 flex flex-col gap-3" id="le-items-list" style="overflow-y:auto;min-height:0">
+        <div id="le-empty" class="flex flex-col items-center justify-center py-20 gap-2" style="color:var(--muted)">
+          <i data-lucide="list" class="w-10 h-10 opacity-20"></i>
+          <p class="text-sm font-medium" style="color:var(--text)">Nenhum item estático</p>
+          <p class="text-xs text-center">Clique em "Adicionar item" para criar itens fixos no topo da lista</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeListEditor()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveListEditor()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Page Editor Modal -->
+<div id="page-editor-modal" class="modal-overlay hidden" onclick="closePageEditor(event)" style="align-items:center;overflow-y:hidden">
+  <div class="modal-box" style="max-width:860px;height:85vh;min-height:500px;overflow:hidden" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:#7c3aed18;color:#7c3aed">
+          <i data-lucide="layout-template" class="w-3.5 h-3.5"></i>
+        </div>
+        <span class="font-semibold text-sm" id="pe-block-name">Editor de Página</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="peToggleAll()" id="pe-toggle-all-btn" title="Colapsar/expandir todos" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-100" style="color:var(--muted);border:1px solid var(--border)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevrons-up-down" aria-hidden="true" class="lucide lucide-chevrons-up-down w-3.5 h-3.5"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+          <span id="pe-toggle-all-label">Colapsar</span>
+        </button>
+        <button onclick="closePageEditor()" style="color:var(--muted)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+    </div>
+    <div class="modal-body" style="flex-direction:row;overflow:hidden;display:flex;min-height:0">
+      <!-- Left: add section types -->
+      <div class="shrink-0 flex flex-col gap-1 p-3" style="width:180px;border-right:1px solid var(--border);background:#fafafa;overflow-y:auto;min-height:0">
+        <p class="field-label mb-2">Adicionar</p>
+        <button class="pe-add-btn" onclick="peAddSection('image')"><i data-lucide="image" class="w-3.5 h-3.5"></i> Imagem</button>
+        <button class="pe-add-btn" onclick="peAddSection('youtube')"><i data-lucide="tv-minimal-play" class="w-3.5 h-3.5"></i> YouTube</button>
+        <button class="pe-add-btn" onclick="peAddSection('code')"><i data-lucide="code-2" class="w-3.5 h-3.5"></i> Código</button>
+        <button class="pe-add-btn" onclick="peAddSection('chart')"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i> Gráfico</button>
+      </div>
+      <!-- Center: sections list -->
+      <div class="flex-1 p-4 flex flex-col gap-3" id="pe-sections-list" style="overflow-y:auto;min-height:0">
+        <div id="pe-empty" class="flex flex-col items-center justify-center py-20 gap-2" style="color:var(--muted)">
+          <i data-lucide="layout-panel-top" class="w-10 h-10 opacity-20"></i>
+          <p class="text-sm">Adicione seções à esquerda</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closePageEditor()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="savePageEditor()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Block Config Modal -->
+<div id="block-config-modal" class="modal-overlay hidden" onclick="closeBlockConfigModal(event)">
+  <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" id="bcm-icon-bg">
+          <i class="w-3.5 h-3.5" id="bcm-icon-el"></i>
+        </div>
+        <span class="font-semibold text-sm" id="bcm-block-name">Configurações</span>
+      </div>
+      <button onclick="closeBlockConfigModal()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="modal-body p-5 flex flex-col gap-4 scroll-y" >
+      <div id="bcm-fields">
+        <p class="text-sm text-center py-8" style="color:var(--muted)">Este bloco não possui configurações específicas.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeBlockConfigModal()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveBlockConfigModal()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Content Modal -->
+<div id="content-modal" class="modal-overlay hidden" onclick="closeContentModal(event)">
+  <div class="modal-box" style="max-width:560px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" id="cm-icon-bg">
+          <i class="w-3.5 h-3.5" id="cm-icon-el"></i>
+        </div>
+        <span class="font-semibold text-sm" id="cm-block-name">Conteúdo</span>
+      </div>
+      <button onclick="closeContentModal()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="modal-body p-5 flex flex-col gap-4 scroll-y" >
+      <div>
+        <p class="field-label">Título do conteúdo</p>
+        <input class="field-input" type="text" placeholder="Título principal" id="cm-content-title">
+      </div>
+      <div>
+        <p class="field-label">Subtítulo do conteúdo</p>
+        <input class="field-input" type="text" placeholder="Subtítulo" id="cm-content-subtitle">
+      </div>
+      <div>
+        <p class="field-label">Foto de perfil</p>
+        <div class="flex items-center gap-3">
+          <div id="cm-photo-empty">
+            <div class="img-upload" style="padding:10px;gap:8px" onclick="triggerUpload('cm-photo-upload')">
+              <i data-lucide="user-circle" class="w-6 h-6" style="color:var(--muted)"></i>
+              <span class="text-xs" style="color:var(--muted)">Adicionar foto</span>
+            </div>
+          </div>
+          <div class="hidden items-center gap-3" id="cm-photo-preview">
+            <div class="profile-photo-wrap">
+              <img id="cm-photo-img" src="" alt="">
+              <div class="remove-photo" onclick="removeCmPhoto()">✕</div>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="cm-photo-upload" class="hidden" accept=".png,.jpg,.jpeg" onchange="handleCmPhoto(this)">
+      </div>
+      <div>
+        <p class="field-label">Localização da foto</p>
+        <select class="field-input" id="cm-photo-position">
+          <option value="side">Ao lado</option>
+          <option value="top">Em cima</option>
+          <option value="hidden">Ocultar</option>
+        </select>
+      </div>
+      <div>
+        <p class="field-label">Imagem do topo <span style="color:var(--muted);font-weight:400">(1125×360px)</span></p>
+        <div class="img-upload" onclick="triggerUpload('cover-upload')">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center shrink-0" style="background:#f4f4f5">
+            <i data-lucide="image" class="w-5 h-5" style="color:var(--muted)" id="cover-preview-placeholder"></i>
+            <img id="cover-preview-img" class="hidden w-12 h-12 rounded-lg object-cover">
+          </div>
+          <div class="text-xs" style="color:var(--muted)">
+            <p>PNG, JPG · máx. 5MB</p>
+            <p style="color:var(--muted);margin-top:2px">Aparece no topo do conteúdo</p>
+          </div>
+        </div>
+        <input type="file" id="cover-upload" class="hidden" accept=".png,.jpg,.jpeg" onchange="handleCoverUpload(this)">
+      </div>
+      <div>
+        <p class="field-label">Introdução</p>
+        <!-- Toolbar -->
+        <div class="editor-toolbar" style="border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0">
+          <button class="toolbar-btn" onclick="editorExec('bold','cm-editable')"><b>B</b></button>
+          <button class="toolbar-btn" onclick="editorFormat('h1','cm-editable')">H1</button>
+          <button class="toolbar-btn" onclick="editorFormat('h2','cm-editable')">H2</button>
+          <button class="toolbar-btn" onclick="editorFormat('h3','cm-editable')">H3</button>
+          <div style="width:1px;background:var(--border);margin:0 2px"></div>
+          <button class="toolbar-btn" onclick="editorExec('insertUnorderedList','cm-editable')">&#8226; Lista</button>
+          <button class="toolbar-btn" onclick="editorExec('insertOrderedList','cm-editable')">1. Lista</button>
+          <div style="width:1px;background:var(--border);margin:0 2px"></div>
+          <button class="toolbar-btn" onclick="editorInsertLink('cm-editable')">&#128279; Link</button>
+          <button class="toolbar-btn ml-auto" onclick="toggleCmSource()" id="cm-source-toggle">&#60;/&#62;</button>
+        </div>
+        <div id="cm-editable" class="html-editable" contenteditable="true" spellcheck="false" style="border:1px solid var(--border);border-radius:0 0 8px 8px;min-height:120px"></div>
+        <textarea id="cm-source" class="field-input hidden" style="border-radius:0 0 8px 8px;resize:none;font-family:monospace;font-size:12px" rows="6"></textarea>
+      </div>
+      <!-- Extra config (block-specific) -->
+      <!-- block-specific config moved to separate modal -->
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeContentModal()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveContentModal()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HTML Editor Modal (standalone intro editor kept for compat) -->
+<div id="html-editor-modal" class="modal-overlay hidden" onclick="closeHtmlModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="font-semibold text-sm">Introdução</span>
+      <div class="flex gap-2">
+        <button onclick="toggleHtmlSource()" id="html-source-toggle" class="toolbar-btn text-xs">&#60;/&#62; HTML</button>
+        <button onclick="closeHtmlModal()" style="color:var(--muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <!-- Toolbar -->
+      <div class="editor-toolbar" id="html-toolbar">
+        <button class="toolbar-btn" onclick="editorExec('bold','html-editable')"><b>B</b></button>
+        <button class="toolbar-btn" onclick="editorFormat('h1','html-editable')">H1</button>
+        <button class="toolbar-btn" onclick="editorFormat('h2','html-editable')">H2</button>
+        <button class="toolbar-btn" onclick="editorFormat('h3','html-editable')">H3</button>
+        <div style="width:1px;background:var(--border);margin:0 2px"></div>
+        <button class="toolbar-btn" onclick="editorExec('insertUnorderedList','html-editable')">&#8226; Lista</button>
+        <button class="toolbar-btn" onclick="editorExec('insertOrderedList','html-editable')">1. Lista</button>
+        <div style="width:1px;background:var(--border);margin:0 2px"></div>
+        <button class="toolbar-btn" onclick="editorInsertLink('html-editable')">&#128279; Link</button>
+      </div>
+      <!-- Rich text area -->
+      <div id="html-editable" class="html-editable" contenteditable="true" spellcheck="false"></div>
+      <!-- Raw HTML source (hidden by default) -->
+      <textarea id="html-source" class="field-input hidden" style="flex:1;border-radius:0;border:none;border-top:1px solid var(--border);resize:none;font-family:monospace;font-size:12px;padding:16px" rows="12"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeHtmlModal()" class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors" style="color:var(--muted)">Cancelar</button>
+      <button onclick="saveHtmlModal()" class="btn-primary" style="width:auto;padding:8px 20px">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div id="ctx-menu" class="ctx-menu hidden" style="position:fixed;z-index:200">
+  <div class="ctx-menu-item" onclick="ctxRename()">
+    <i data-lucide="pencil" class="w-3 h-3 inline mr-2"></i>Renomear
+  </div>
+  <div class="ctx-menu-item" onclick="ctxDuplicate()">
+    <i data-lucide="copy" class="w-3 h-3 inline mr-2"></i>Duplicar
+  </div>
+  <div class="ctx-menu-item hidden" id="ctx-indent-item" onclick="ctxIndent()">
+    <i data-lucide="corner-down-right" class="w-3 h-3 inline mr-2"></i>Mover para grupo acima
+  </div>
+  <div class="ctx-menu-item hidden" id="ctx-deindent-item" onclick="ctxDeindent()">
+    <i data-lucide="corner-up-left" class="w-3 h-3 inline mr-2"></i>Tirar do grupo
+  </div>
+  <div style="height:1px;background:var(--border);margin:4px 0"></div>
+  <div class="ctx-menu-item danger" onclick="ctxDelete()">
+    <i data-lucide="trash-2" class="w-3 h-3 inline mr-2"></i>Remover
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// BLOCK DEFINITIONS
+// ═══════════════════════════════════════════════════════
+const BLOCKS = [
+  { id:'grupo_abas', label:'Grupo de abas', icon:'layout-dashboard', color:'#7c3aed', isGroup:true, extra:[] },
+  { id:'contato',    label:'Contato',       icon:'mail',             color:'#f59e0b', extra:[
+    {key:'email',   type:'text',          label:'E-mail',       placeholder:'contato@exemplo.com'},
+    {key:'phone',   type:'text',          label:'Telefone',     placeholder:'(00) 00000-0000'},
+    {key:'address', type:'textarea',      label:'Endereço',     placeholder:'Rua, Número, Cidade'},
+    {key:'body',    type:'html_simple',   label:'Corpo do formulário', placeholder:'Texto acima do formulário...'},
+  ]},
+  { id:'page',       label:'Página',        icon:'layout-template',  color:'#7c3aed', extra:[] },
+  { id:'lista',       label:'Lista',      icon:'list',            color:'#64748b', extra:[] },
+  { id:'formulario',  label:'Formulário', icon:'file-text',       color:'#6366f1', extra:[] },
+  { id:'dashboard',   label:'Dashboard',  icon:'bar-chart-2',     color:'#0ea5e9', extra:[] },
+];
+
+// ═══════════════════════════════════════════════════════
+// SINGLE SOURCE OF TRUTH
+// ═══════════════════════════════════════════════════════
+let appState = {
+  settings: { name:'isis', category:'', description:'', neonUrl:'', accessToken:'', authUrl:'', apiUrl:'' },
+  theme: {
+    header:  '#2c3e50',
+    background: "#ecf0f1",
+    border:  "#8e9295",
+    block:   "#f6f8f8",
+  },
+  blocks: []
+};
+window.appState = appState;
+
+function commit() { window.appState = appState; }
+
+// UI state (not part of app data)
+let selectedUid  = null;   // selected block uid in content tab
+let activeTab    = 'settings';
+let ctxTarget    = null;   // for three-dot menu
+let groupStack   = [];     // navigation stack: array of {uid, title} — empty = root
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  lucide.createIcons();
+  renderPalette();
+  setupCanvasDnD();
+  setupTabs();
+  initThemePalettes();
+  document.addEventListener('click', closeCtxMenu);
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  if (tab === 'gallery') {
+    document.getElementById('tab-organize').classList.add('active');
+    renderOrganize();
+  } else if (tab === 'content') {
+    document.getElementById('tab-content').classList.add('active');
+    renderCanvas();
+  } else {
+    document.getElementById('tab-settings').classList.add('active');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// PALETTE
+// ═══════════════════════════════════════════════════════
+function renderPalette() {
+  const grid = document.getElementById('block-palette');
+  grid.innerHTML = '';
+  BLOCKS.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'block-card';
+    card.draggable = true;
+    card.dataset.blockId = b.id;
+    card.innerHTML = `
+      <div class="icon-wrap" style="color:${b.color};background:${b.color}18;border-radius:8px">
+        <i data-lucide="${b.icon}" class="w-5 h-5"></i>
+      </div>
+      <span style="line-height:1.3">${b.badge ? `<span class="badge-novo">${b.badge}</span><br>` : ''}${b.label}</span>
+    `;
+    card.addEventListener('dragstart', e => e.dataTransfer.setData('blockId', b.id));
+    grid.appendChild(card);
+  });
+  lucide.createIcons();
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+/** Returns the array that is currently "active" in the canvas (root or deepest group in stack) */
+function activeList() {
+  let list = appState.blocks;
+  for (const { uid: gid } of groupStack) {
+    const grp = list.find(b => b.uid === gid);
+    if (!grp || !grp.children) return list;
+    list = grp.children;
+  }
+  return list;
+}
+
+function findBlock(uid2, list) {
+  list = list || appState.blocks;
+  for (const b of list) {
+    if (b.uid === uid2) return b;
+    if (b.children) { 
+      const f = findBlock(uid2, b.children);      
+      if (f) return f; 
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// CANVAS (content tab)
+// ═══════════════════════════════════════════════════════
+function setupCanvasDnD() {
+  const drop = document.getElementById('canvas-drop');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    const blockId = e.dataTransfer.getData('blockId');
+    if (blockId) addBlock(blockId);
+  });
+}
+
+function addBlock(blockId) {
+  const def = BLOCKS.find(b => b.id === blockId);
+  if (!def) return;
+  const item = { uid: uid(), blockId, title: def.label, icon: null, cover: null, config: {}, children: def.isGroup ? [] : null };
+  activeList().push(item);
+  commit();
+  renderCanvas();
+  renderOrganize();
+  selectBlock(item.uid);
+}
+
+function renderCanvas() {
+  const drop       = document.getElementById('canvas-drop');
+  const empty      = document.getElementById('canvas-empty');
+  const breadcrumb = document.getElementById('canvas-breadcrumb');
+
+  // Remove only dynamic wraps, keep #canvas-empty in place
+  [...drop.children].forEach(ch => { if (ch.id !== 'canvas-empty') ch.remove(); });
+  breadcrumb.style.display = 'none';
+
+  const allBlocks = appState.blocks;
+  empty.style.display = allBlocks.length ? 'none' : 'flex';
+
+  function renderCanvasItem(item, container, parentUid, depth) {
+    const def     = BLOCKS.find(b => b.id === item.blockId);
+    const isGroup = item.children !== null;
+
+    const wrap = document.createElement('div');
+    wrap.dataset.uid   = item.uid;
+    wrap.dataset.depth = depth;
+    // Indent the whole wrap like tab 3 does
+    wrap.style.paddingLeft = `${depth * 20}px`;
+
+    const el = document.createElement('div');
+    el.className   = 'canvas-item app-item';
+    el.dataset.uid = item.uid;
+    el.style.cursor = 'pointer';
+
+    el.innerHTML = `
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background:${def.color}18;color:${def.color}">
+        <i data-lucide="${def.icon}" class="w-3.5 h-3.5"></i>
+      </div>
+      <span class="flex-1 text-sm font-medium truncate">${item.title}</span>
+      ${isGroup ? `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium shrink-0" style="background:var(--purple-light);color:var(--purple)">${item.children.length}</span>` : ''}
+      <i data-lucide="chevron-right" class="w-4 h-4 shrink-0" style="color:var(--muted)"></i>
+    `;
+
+    el.addEventListener('click', () => selectBlock(item.uid));
+    wrap.appendChild(el);
+
+    if (isGroup) {
+      const childrenWrap = document.createElement('div');
+      childrenWrap.className = 'canvas-group-children';
+
+      if (item.children.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'app-item';
+        hint.style.cssText = 'opacity:.45;pointer-events:none;padding-left:4px';
+        hint.innerHTML = `
+          <i data-lucide="corner-down-right" class="w-3 h-3 shrink-0" style="color:var(--muted)"></i>
+          <span class="text-xs italic" style="color:var(--muted)">Grupo vazio</span>
+        `;
+        childrenWrap.appendChild(hint);
+      } else {
+        item.children.forEach(child => renderCanvasItem(child, childrenWrap, item.uid, depth + 1));
+      }
+
+      wrap.appendChild(childrenWrap);
+    }
+
+    container.appendChild(wrap);
+  }
+
+  allBlocks.forEach(item => renderCanvasItem(item, drop, null, 0));
+
+  lucide.createIcons();
+  highlightSelected();
+}
+
+function enterGroup(uid2) {
+  // Find title from current activeList
+  const item = activeList().find(b => b.uid === uid2);
+  groupStack.push({ uid: uid2, title: item ? item.title : 'Grupo' });
+  deselectBlock();
+  renderCanvas();
+}
+
+function exitGroup() {
+  groupStack.pop();
+  deselectBlock();
+  renderCanvas();
+}
+
+function goToStackLevel(idx) {
+  // idx = -1 means root
+  groupStack = idx < 0 ? [] : groupStack.slice(0, idx + 1);
+  deselectBlock();
+  renderCanvas();
+}
+
+function highlightSelected() {
+  document.querySelectorAll('.canvas-item').forEach(el => {
+    el.classList.toggle('block-selected', el.dataset.uid === selectedUid);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// BLOCK CONFIG (right panel)
+// ═══════════════════════════════════════════════════════
+function selectBlock(uid2) {
+  selectedUid = uid2;
+  highlightSelected();
+  const item = findBlock(uid2);
+  if (!item) return;
+  const def = BLOCKS.find(b => b.id === item.blockId);
+
+  document.getElementById('block-config-empty').classList.add('hidden');
+  const form = document.getElementById('block-config-form');
+  form.classList.remove('hidden');
+  form.classList.add('flex');
+  document.getElementById('config-block-name').textContent = def.label;
+
+  const titleInput = document.getElementById('block-title');
+  titleInput.value = item.title;
+  titleInput.oninput = () => { item.title = titleInput.value; commit(); };
+
+  // Block icon in header
+  const iconBg = document.getElementById('config-block-icon-bg');
+  const iconEl = document.getElementById('config-block-icon-el');
+  if (iconBg) iconBg.style.cssText = `background:${def.color}18;color:${def.color}`;
+  if (iconEl) { iconEl.setAttribute('data-lucide', def.icon); }
+
+  // Icon preview
+  const iconImg = document.getElementById('icon-preview-img');
+  const iconPh  = document.getElementById('icon-preview-placeholder');
+  if (item.icon) {
+    iconImg.src = item.icon; iconImg.classList.remove('hidden'); iconPh.classList.add('hidden');
+  } else {
+    iconImg.src = ''; iconImg.classList.add('hidden'); iconPh.classList.remove('hidden');
+  }
+  document.getElementById('icon-upload').value = '';
+
+  // Cover is now in the content modal — populated when opened
+
+  // Switches — read from item.display (defaults all true)
+  const disp = item.display || {};
+  document.getElementById('sw-bg-image').checked  = disp.bgImage    !== false;
+  document.getElementById('sw-title').checked      = disp.showTitle   !== false;
+  document.getElementById('sw-subtitle').checked   = disp.showSubtitle !== false;
+  document.getElementById('sw-intro').checked      = disp.showIntro   !== false;
+
+  // Group shortcut button
+  const groupBtn = document.getElementById('config-enter-group');
+  if (item.children !== null) {
+    groupBtn.style.display = 'block';
+    groupBtn.onclick = () => enterGroup(item.uid);
+  } else {
+    groupBtn.style.display = 'none';
+  }
+
+  // Hide block config button if no extra fields
+  const bcmBtn = document.getElementById('btn-block-config');
+  const hasBlockConfig = def.extra.length > 0 || ['page','lista','formulario','dashboard'].includes(def.id);
+  if (bcmBtn) {
+    bcmBtn.style.display = hasBlockConfig ? 'flex' : 'none';
+    const btnLabels = { page:'Editar página', lista:'Editar lista', formulario:'Editar formulário', dashboard:'Editar dashboard' };
+    bcmBtn.querySelector('span') && (bcmBtn.querySelector('span').textContent = btnLabels[def.id] || 'Configurações do bloco');
+  }
+
+  lucide.createIcons();
+}
+
+function deselectBlock() {
+  selectedUid = null;
+  highlightSelected();
+  document.getElementById('block-config-empty').classList.remove('hidden');
+  const form = document.getElementById('block-config-form');
+  form.classList.add('hidden');
+  form.classList.remove('flex');
+}
+
+function removeSelectedBlock() {
+  if (!selectedUid) return;
+  const lst = activeList();
+  const idx = lst.findIndex(b => b.uid === selectedUid);
+  if (idx !== -1) lst.splice(idx, 1);
+  commit();
+  deselectBlock();
+  renderCanvas();
+  renderOrganize();
+}
+
+// ═══════════════════════════════════════════════════════
+// ORGANIZE TAB — native drag, instant indicator
+// ═══════════════════════════════════════════════════════
+
+// Flat list of all droppable positions, rebuilt on each render
+// Each entry: { el, beforeUid, parentUid, depth }
+let dropZones = [];
+let dragState  = null; // { uid, fromParentUid, item }
+let indicatorEl = null;
+
+function renderOrganize() {
+  const list  = document.getElementById('org-list');
+  const empty = document.getElementById('org-empty');
+  const count = document.getElementById('org-count');
+  [...list.children].forEach(ch => { if (ch.id !== 'org-empty') ch.remove(); });
+  dropZones = [];
+  empty.style.display = appState.blocks.length ? 'none' : 'flex';
+  count.textContent   = `${appState.blocks.length} de 50`;
+
+  // Ensure indicator element exists
+  if (!indicatorEl) {
+    indicatorEl = document.createElement('div');
+    indicatorEl.id = 'drop-indicator';
+    indicatorEl.className = 'drop-indicator hidden';
+    document.body.appendChild(indicatorEl);
+  }
+
+  appState.blocks.forEach(item => renderOrgItem(item, list, null, 0));
+  lucide.createIcons();
+}
+
+/* ── Render one item row ─────────────────────────────── */
+function renderOrgItem(item, container, parentUid, depth) {
+  const def     = BLOCKS.find(b => b.id === item.blockId);
+  const isGroup = item.children !== null;
+  const wrap    = document.createElement('div');
+  wrap.dataset.uid   = item.uid;
+  wrap.dataset.depth = depth;
+  wrap.style.paddingLeft = `${depth * 20}px`;
+
+  // Compute sibling context for indent/deindent buttons
+  function getSiblingGroup() {
+    const lst = parentUid ? (findBlock(parentUid)?.children || appState.blocks) : appState.blocks;
+    const idx = lst.findIndex(b => b.uid === item.uid);
+    for (let i = idx - 1; i >= 0; i--) if (lst[i].children !== null) return lst[i];
+    return null;
+  }
+  const canIndent   = prevGroupExists(item.uid, parentUid);
+  const canDeindent = !!parentUid;
+
+  const row = document.createElement('div');
+  row.className  = 'app-item';
+  row.dataset.uid = item.uid;
+  row.draggable  = false; // handle-only via mousedown
+
+  row.innerHTML = `
+    <span class="drag-handle cursor-grab select-none" data-drag="${item.uid}">
+      <i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i>
+    </span>
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background:${def.color}18;color:${def.color}">
+      <i data-lucide="${def.icon}" class="w-3.5 h-3.5"></i>
+    </div>
+    <span class="flex-1 text-sm font-medium truncate">${item.title}</span>
+    ${isGroup ? `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium shrink-0" style="background:var(--purple-light);color:var(--purple)">${item.children.length}</span>` : ''}
+    ${canDeindent ? `<button class="indent-btn p-1 rounded shrink-0" title="Tirar do grupo" style="color:var(--muted)" data-action="deindent">
+      <i data-lucide="corner-up-left" class="w-3.5 h-3.5 pointer-events-none"></i>
+    </button>` : ''}
+    ${canIndent ? `<button class="indent-btn p-1 rounded shrink-0" title="Mover para grupo acima" style="color:var(--muted)" data-action="indent">
+      <i data-lucide="corner-down-right" class="w-3.5 h-3.5 pointer-events-none"></i>
+    </button>` : ''}
+    ${isGroup ? `<button class="toggle-group-btn p-1 rounded hover:bg-gray-100 shrink-0" style="color:var(--purple)">
+      <i data-lucide="chevron-up" class="w-4 h-4 pointer-events-none"></i>
+    </button>` : ''}
+    <button class="three-dot-btn p-1 rounded hover:bg-gray-100 shrink-0">
+      <i data-lucide="more-vertical" class="w-4 h-4 pointer-events-none" style="color:var(--muted)"></i>
+    </button>
+  `;
+
+  // ── Drag handle: mousedown starts native drag ──
+  row.querySelector('[data-drag]').addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    startOrgDrag(item, parentUid, row, e);
+  });
+
+  // Indent / deindent buttons
+  row.querySelector('[data-action="indent"]')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const grp = getSiblingGroup();
+    if (grp) indentItem(item.uid, parentUid, grp.uid);
+  });
+  row.querySelector('[data-action="deindent"]')?.addEventListener('click', e => {
+    e.stopPropagation();
+    deindentItem(item.uid, parentUid);
+  });
+
+  // Toggle group expand/collapse
+  row.querySelector('.toggle-group-btn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const ch  = wrap.querySelector('.group-children');
+    const ico = e.currentTarget.querySelector('[data-lucide]');
+    if (ch) {
+      const collapsed = ch.classList.toggle('collapsed');
+      ico.setAttribute('data-lucide', collapsed ? 'chevron-down' : 'chevron-up');
+      lucide.createIcons();
+    }
+  });
+
+  // Three-dot menu
+  row.querySelector('.three-dot-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    ctxTarget = { uid: item.uid, parentUid: parentUid || null };
+    document.getElementById('ctx-indent-item').classList.toggle('hidden', !canIndent);
+    document.getElementById('ctx-deindent-item').classList.toggle('hidden', !canDeindent);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menu = document.getElementById('ctx-menu');
+    menu.style.top  = `${rect.bottom + 4}px`;
+    menu.style.left = `${rect.right - 160}px`;
+    menu.classList.remove('hidden');
+  });
+
+  wrap.appendChild(row);
+
+  if (isGroup) {
+    const children = document.createElement('div');
+    children.className = 'group-children';
+    item.children.forEach(child => renderOrgItem(child, children, item.uid, depth + 1));
+    wrap.appendChild(children);
+  }
+
+  container.appendChild(wrap);
+}
+
+/* ── Helper: does a group exist before uid in its list? ── */
+function prevGroupExists(uid2, parentUid2) {
+  const lst = parentUid2 ? (findBlock(parentUid2)?.children || appState.blocks) : appState.blocks;
+  const idx = lst.findIndex(b => b.uid === uid2);
+  for (let i = idx - 1; i >= 0; i--) if (lst[i].children !== null) return true;
+  return false;
+}
+
+/* ══════════════════════════════════════════════════════
+   NATIVE DRAG ENGINE
+   ══════════════════════════════════════════════════════ */
+function startOrgDrag(item, fromParentUid, rowEl, startEvt) {
+  dragState = { uid: item.uid, fromParentUid, item };
+  rowEl.style.opacity = '0.4';
+
+  // Ghost element that follows cursor
+  const ghost = rowEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${rowEl.offsetWidth}px;opacity:.85;box-shadow:0 8px 24px rgba(0,0,0,.15);border-radius:8px;background:#fff;transform:rotate(1deg)`;
+  document.body.appendChild(ghost);
+
+  function positionGhost(e) {
+    ghost.style.left = `${e.clientX + 12}px`;
+    ghost.style.top  = `${e.clientY - rowEl.offsetHeight / 2}px`;
+  }
+  positionGhost(startEvt);
+
+  // Build flat list of all row elements for hit-testing
+  function collectRows() {
+    return [...document.querySelectorAll('#org-list .app-item')].filter(r => r.dataset.uid !== item.uid);
+  }
+
+  function getBestDrop(e) {
+    const rows = collectRows();
+    if (!rows.length) return { parentUid: null, beforeUid: null, refEl: null, after: false };
+
+    // Find row closest to cursor Y
+    let best = null, bestDist = Infinity;
+    for (const r of rows) {
+      const rect = r.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const dist = Math.abs(e.clientY - midY);
+      if (dist < bestDist) { bestDist = dist; best = r; }
+    }
+
+    const rect   = best.getBoundingClientRect();
+    const after  = e.clientY > rect.top + rect.height / 2;
+    const uid2   = best.dataset.uid;
+    const wrap   = best.closest('[data-uid]');
+    const depth  = parseInt(wrap?.dataset.depth ?? '0');
+    const pUid   = getParentUid(uid2);
+
+    // Determine indent level from horizontal position relative to list
+    const listRect   = document.getElementById('org-list').getBoundingClientRect();
+    const relX       = e.clientX - listRect.left;
+    const dragDepth  = Math.max(0, Math.floor((relX - 32) / 20)); // 20px per level, offset for handle
+
+    // If dragging into a group (depth > current row depth), find the group
+    if (dragDepth > depth && after) {
+      const rowItem = findBlock(uid2);
+      if (rowItem?.children !== null) {
+        // Enter this group as last child
+        return { parentUid: uid2, beforeUid: null, refEl: best, after: true, enterGroup: uid2 };
+      }
+    }
+
+    return { parentUid: pUid, beforeUid: after ? null : uid2, afterUid: after ? uid2 : null, refEl: best, after };
+  }
+
+  function getParentUid(uid2) {
+    for (const b of appState.blocks) {
+      if (b.uid === uid2) return null;
+      if (b.children) for (const c of b.children) if (c.uid === uid2) return b.uid;
+    }
+    return null;
+  }
+
+  let lastDrop = null;
+
+  function onMove(e) {
+    positionGhost(e);
+    lastDrop = getBestDrop(e);
+
+    // Position indicator
+    const { refEl, after, enterGroup } = lastDrop;
+    if (!refEl) { indicatorEl.classList.add('hidden'); return; }
+
+    const rect = refEl.getBoundingClientRect();
+    const listRect = document.getElementById('org-list').getBoundingClientRect();
+
+    // Clear group highlights
+    document.querySelectorAll('.org-group-hover').forEach(el => el.classList.remove('org-group-hover'));
+
+    if (enterGroup) {
+      refEl.classList.add('org-group-hover');
+      indicatorEl.classList.add('hidden');
+    } else {
+      indicatorEl.classList.remove('hidden');
+      const y = after ? rect.bottom : rect.top;
+      const depth2 = parseInt(refEl.closest('[data-uid]')?.dataset.depth ?? '0');
+      const indent  = depth2 * 20 + 32;
+      Object.assign(indicatorEl.style, {
+        position: 'fixed',
+        top:   `${y - 1}px`,
+        left:  `${listRect.left + indent}px`,
+        width: `${listRect.width - indent - 16}px`,
+      });
+    }
+  }
+
+  function onUp(e) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+    ghost.remove();
+    rowEl.style.opacity = '';
+    indicatorEl.classList.add('hidden');
+    document.querySelectorAll('.org-group-hover').forEach(el => el.classList.remove('org-group-hover'));
+
+    if (!lastDrop) return;
+    applyDrop(lastDrop);
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+function applyDrop({ parentUid: toParentUid, beforeUid, afterUid, enterGroup }) {
+  const { uid: movedUid, fromParentUid } = dragState;
+
+  // Remove from source
+  const fromList = fromParentUid ? findBlock(fromParentUid)?.children : appState.blocks;
+  if (!fromList) return;
+  const srcIdx = fromList.findIndex(b => b.uid === movedUid);
+  if (srcIdx === -1) return;
+  const [moved] = fromList.splice(srcIdx, 1);
+
+  if (enterGroup) {
+    // Drop into group as last child
+    const grp = findBlock(enterGroup);
+    if (grp?.children) grp.children.push(moved);
+    else fromList.splice(srcIdx, 0, moved); // rollback
+  } else {
+    // Drop into target list at position
+    const toList = toParentUid ? findBlock(toParentUid)?.children : appState.blocks;
+    if (!toList) { fromList.splice(srcIdx, 0, moved); return; }
+
+    const refUid = beforeUid || afterUid;
+    let toIdx    = refUid ? toList.findIndex(b => b.uid === refUid) : toList.length;
+    if (toIdx === -1) toIdx = toList.length;
+    if (afterUid) toIdx += 1;
+    toList.splice(toIdx, 0, moved);
+  }
+
+  commit(); renderCanvas(); renderOrganize();
+}
+
+/* ═══════════════════════════════════════════════════════
+   INDENT / DEINDENT (shared by drag + buttons + ctx menu)
+   ═══════════════════════════════════════════════════════ */
+function indentItem(movedUid, fromParentUid, groupUid) {
+  if (movedUid === groupUid) return;
+  const fromList = fromParentUid ? findBlock(fromParentUid)?.children : appState.blocks;
+  if (!fromList) return;
+  const idx = fromList.findIndex(b => b.uid === movedUid);
+  if (idx === -1) return;
+  const [moved] = fromList.splice(idx, 1);
+  const group = findBlock(groupUid);
+  if (!group?.children) { fromList.splice(idx, 0, moved); return; }
+  group.children.push(moved);
+  commit(); renderCanvas(); renderOrganize();
+}
+
+function deindentItem(movedUid, fromParentUid) {
+  const parent = findBlock(fromParentUid);
+  if (!parent?.children) return;
+  const idx = parent.children.findIndex(b => b.uid === movedUid);
+  if (idx === -1) return;
+  const [moved] = parent.children.splice(idx, 1);
+  const parentIdx = appState.blocks.findIndex(b => b.uid === fromParentUid);
+  appState.blocks.splice(parentIdx + 1, 0, moved);
+  commit(); renderCanvas(); renderOrganize();
+}
+
+// ═══════════════════════════════════════════════════════
+// CTX MENU
+// ═══════════════════════════════════════════════════════
+function closeCtxMenu() { document.getElementById('ctx-menu').classList.add('hidden'); }
+
+function ctxRename() {
+  closeCtxMenu();
+  if (!ctxTarget) return;
+  const item = findBlock(ctxTarget.uid);
+  if (!item) return;
+  const name = prompt('Novo nome:', item.title);
+  if (name && name.trim()) { item.title = name.trim(); commit(); renderCanvas(); renderOrganize(); }
+}
+
+function ctxDuplicate() {
+  closeCtxMenu();
+  if (!ctxTarget) return;
+  const item = findBlock(ctxTarget.uid);
+  if (!item) return;
+  const clone = JSON.parse(JSON.stringify(item));
+  clone.uid = uid();
+  clone.title += ' (cópia)';
+  if (ctxTarget.parentUid) {
+    const parent = findBlock(ctxTarget.parentUid);
+    if (parent?.children) { parent.children.push(clone); commit(); }
+  } else {
+    appState.blocks.push(clone); commit();
+  }
+  renderCanvas(); renderOrganize();
+}
+
+function ctxIndent() {
+  closeCtxMenu();
+  if (!ctxTarget) return;
+  // Find prev sibling group in root
+  const lst = appState.blocks;
+  const idx = lst.findIndex(b => b.uid === ctxTarget.uid);
+  let grp = null;
+  for (let i = idx - 1; i >= 0; i--) {
+    if (lst[i].children !== null) { grp = lst[i]; break; }
+  }
+  if (grp) indentItem(ctxTarget.uid, null, grp.uid);
+}
+
+function ctxDeindent() {
+  closeCtxMenu();
+  if (!ctxTarget?.parentUid) return;
+  deindentItem(ctxTarget.uid, ctxTarget.parentUid);
+}
+
+function ctxDelete() {
+  closeCtxMenu();
+  if (!ctxTarget) return;
+  if (ctxTarget.parentUid) {
+    const parent = findBlock(ctxTarget.parentUid);
+    if (parent?.children) { parent.children = parent.children.filter(c => c.uid !== ctxTarget.uid); commit(); }
+  } else {
+    appState.blocks = appState.blocks.filter(b => b.uid !== ctxTarget.uid); commit();
+  }
+  renderCanvas(); renderOrganize();
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE ACTIONS
+// ═══════════════════════════════════════════════════════
+function saveSelectedBlock() {
+  if (!selectedUid) return;
+  const item = findBlock(selectedUid);
+  if (!item) return;
+
+  // Title (icon & cover already written by upload handlers live)
+  const titleInput = document.getElementById('block-title');
+  if (titleInput) item.title = titleInput.value;
+
+  // Switches → item.display
+  if (!item.display) item.display = {};
+  item.display.bgImage      = document.getElementById('sw-bg-image').checked;
+  item.display.showTitle    = document.getElementById('sw-title').checked;
+  item.display.showSubtitle = document.getElementById('sw-subtitle').checked;
+  item.display.showIntro    = document.getElementById('sw-intro').checked;
+
+  commit();
+  renderCanvas();
+  renderOrganize();
+  showSaveFeedback('block-save-btn');
+}
+
+function onSwitch(key, val) {
+  if (!selectedUid) return;
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  if (!item.display) item.display = {};
+  item.display[key] = val;
+  commit();
+}
+
+function saveSettings() {
+  appState.settings.name        = document.getElementById('app-name')?.value || '';
+  appState.settings.category    = document.getElementById('app-category')?.value || '';
+  appState.settings.neonUrl     = document.getElementById('neon-url')?.value || '';
+  appState.settings.accessToken = document.getElementById('token-field')?.value || '';
+  appState.settings.authUrl     = document.getElementById('auth-url')?.value || '';
+  appState.settings.apiUrl      = document.getElementById('api-url')?.value || '';
+  commit();
+  showSaveFeedback('settings-save-btn');
+}
+
+function showSaveFeedback(btnId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Salvo!';
+  btn.style.background = '#10b981';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1500);
+}
+
+// ═══════════════════════════════════════════════════════
+// MISC
+// ═══════════════════════════════════════════════════════
+function syncSettings() {
+  document.getElementById('app-name').value = appState.settings.name || '';
+  document.getElementById('app-category').value = appState.settings.category || '';
+  document.getElementById('neon-url').value = appState.settings.neonUrl || '';
+  document.getElementById('token-field').value = appState.settings.accessToken || '';
+  document.getElementById('auth-url').value = appState.settings.authUrl || '';
+  document.getElementById('api-url').value = appState.settings.apiUrl || '';
+}
+
+function openApp() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "application/json";
+
+  input.onchange = async (event) => {
+    const file = event.target.files[0];
+    window.appState = JSON.parse(await file.text());
+
+    appState = window.appState;
+    commit();
+    renderCanvas();
+    syncSettings();
+    applyThemePreview();
+    initThemePalettes();
+
+    input.remove();
+  }
+
+  input.click();
+}
+
+function exportApp() {
+  const blob = new Blob([JSON.stringify(appState)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${appState.settings.name}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+function buildApp() {
+  console.log('%c📱 appState — fonte verdade', 'color:#7c3aed;font-weight:bold;font-size:14px');
+  console.log(JSON.stringify(appState, null, 2));
+  console.log('%cReferência viva:', 'color:#71717a;font-size:11px', appState);
+}
+
+function toggleToken() {
+  const field = document.getElementById('token-field');
+  const eye   = document.getElementById('token-eye');
+  field.type  = field.type === 'password' ? 'text' : 'password';
+  eye.setAttribute('data-lucide', field.type === 'password' ? 'eye' : 'eye-off');
+  lucide.createIcons();
+}
+
+function triggerUpload(id) { document.getElementById(id).click(); }
+
+function previewImg(input, imgId, placeholderId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(imgId);
+    img.src = e.target.result;
+    img.classList.remove('hidden');
+    document.getElementById(placeholderId).classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD EDITOR
+// ══════════════════════════════════════════════════════
+const DE_CHARTS   = ['Linha','Coluna','Pizza','Barras'];
+const DE_FORMULAS = ['Contar','Somar','Média','Mínimo','Máximo'];
+const DE_OPS      = ['=','≠','>','<','≥','≤','contém','não contém','está vazio','não está vazio'];
+const DE_BOOL     = ['AND','OR'];
+
+let _deWidgets = [];
+let _deItemUid = null;
+let _deDragState  = null;
+let _deIndicator  = null;
+
+// ── Open / close / save ───────────────────────────────
+function openDashEditor() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  _deItemUid = item.uid;
+  _deWidgets = JSON.parse(JSON.stringify(item.dashWidgets || []));
+  document.getElementById('de-block-name').textContent = item.title || 'Editor de Dashboard';
+  document.getElementById('de-table').value = item.dashTable || '';
+  renderDeWidgets();
+  document.getElementById('dash-editor-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeDashEditor(e) {
+  if (e && e.target !== document.getElementById('dash-editor-modal')) return;
+  document.getElementById('dash-editor-modal').classList.add('hidden');
+}
+
+function saveDashEditor() {
+  collectDeValues();
+  const item = findBlock(_deItemUid);
+  if (item) {
+    item.dashWidgets = _deWidgets;
+    item.dashTable   = document.getElementById('de-table').value;
+    commit();
+  }
+  document.getElementById('dash-editor-modal').classList.add('hidden');
+}
+
+// ── Add / remove ──────────────────────────────────────
+function deAddWidget() {
+  collectDeValues();
+  _deWidgets.push({
+    uid: uid(), title:'', description:'', chart:'Coluna',
+    formulas: [{ uid: uid(), fn:'Contar', field:'', filters:[] }],
+    universeFilters: [],
+  });
+  renderDeWidgets();
+  setTimeout(() => {
+    const list = document.getElementById('de-widgets-list');
+    list.scrollTop = list.scrollHeight;
+  }, 50);
+}
+
+function deRemoveWidget(uid2) {
+  collectDeValues();
+  _deWidgets = _deWidgets.filter(w => w.uid !== uid2);
+  renderDeWidgets();
+}
+
+// ── Render ────────────────────────────────────────────
+function renderDeWidgets() {
+  const list  = document.getElementById('de-widgets-list');
+  const empty = document.getElementById('de-empty');
+  [...list.children].forEach(ch => { if (ch.id !== 'de-empty') ch.remove(); });
+  empty.style.display = _deWidgets.length ? 'none' : 'flex';
+  _deWidgets.forEach(w => list.appendChild(buildDeWidget(w)));
+  setupDeDrag(list);
+  lucide.createIcons();
+}
+
+function buildDeWidget(w) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pe-section';
+  wrap.dataset.uid = w.uid;
+  wrap.style.flexShrink = '0';
+
+  const chartOpts = DE_CHARTS.map(c =>
+    `<option value="${c}" ${w.chart===c?'selected':''}>${c}</option>`).join('');
+
+  wrap.innerHTML = `
+    <div class="pe-section-header">
+      <span class="pe-drag-handle" data-de-drag="${w.uid}">
+        <i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i>
+      </span>
+      <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 shrink-0" style="color:#0ea5e9"></i>
+      <span class="pe-section-type">Widget</span>
+      <button class="pe-remove-btn" onclick="deRemoveWidget('${w.uid}')">
+        <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </button>
+    </div>
+    <div class="pe-section-body" id="de-body-${w.uid}">
+
+      <!-- Title + description + chart -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:8px;margin-bottom:12px">
+        <div>
+          <p class="field-label">Título</p>
+          <input class="field-input de-title-inp" type="text" placeholder="Nome do widget" value="${esc(w.title)}">
+        </div>
+        <div>
+          <p class="field-label">Tipo de gráfico</p>
+          <select class="field-input de-chart-sel">${chartOpts}</select>
+        </div>
+        <div style="grid-column:1/-1">
+          <p class="field-label">Descrição</p>
+          <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <div class="editor-toolbar" style="border:none;border-bottom:1px solid var(--border);padding:4px 6px">
+              <button class="toolbar-btn" onclick="editorExec('bold','de-desc-${w.uid}')"><b>B</b></button>
+              <button class="toolbar-btn" onclick="editorExec('insertUnorderedList','de-desc-${w.uid}')">&#8226;</button>
+              <button class="toolbar-btn" onclick="editorInsertLink('de-desc-${w.uid}')">&#128279;</button>
+            </div>
+            <div id="de-desc-${w.uid}" class="html-editable" contenteditable="true" spellcheck="false"
+              style="min-height:48px;border-radius:0;flex:none;padding:8px 12px;font-size:13px">${w.description||''}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Universe filters (_total) -->
+      <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <p class="section-title" style="font-size:10px;margin-bottom:6px">
+          Filtro do universo —
+          <code style="background:var(--purple-light);color:var(--purple);padding:1px 4px;border-radius:4px">_total</code>
+          <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)"> · aplica a todas as fórmulas</span>
+        </p>
+        <div id="de-ufilters-${w.uid}">
+          ${(w.universeFilters||[]).map((fi,i) => buildDeFilterHtml(w.uid,'u',i,fi)).join('')}
+        </div>
+        <button onclick="deAddFilter('${w.uid}','u')" class="pe-add-btn" style="width:fit-content;margin-top:4px">
+          <i data-lucide="plus" class="w-3 h-3"></i> Regra
+        </button>
+      </div>
+
+      <!-- Formulas list (_filtered) -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <p class="section-title" style="font-size:10px;margin-bottom:0">
+            Fórmulas —
+            <code style="background:#0ea5e918;color:#0ea5e9;padding:1px 4px;border-radius:4px">_filtered</code>
+          </p>
+          <button onclick="deAddFormula('${w.uid}')" class="pe-add-btn" style="width:fit-content;padding:4px 8px;font-size:11px">
+            <i data-lucide="plus" class="w-3 h-3"></i> Fórmula
+          </button>
+        </div>
+        <div id="de-formulas-${w.uid}" class="flex flex-col gap-3">
+          ${(w.formulas||[]).map((f,fi) => buildDeFormulaBlock(w.uid, f, fi)).join('')}
+        </div>
+      </div>
+
+    </div>
+  `;
+  return wrap;
+}
+
+function buildDeFormulaBlock(wuid, formula, idx) {
+  const fnOpts = DE_FORMULAS.map(fn =>
+    `<option value="${fn}" ${formula.fn===fn?'selected':''}>${fn}</option>`).join('');
+  const filtersHtml = (formula.filters||[]).map((fi,i) => buildDeFilterHtml(wuid, `fm${idx}`, i, fi)).join('');
+  return `
+    <div class="de-formula-block" data-fml-idx="${idx}" style="background:#fafafa;border:1px solid var(--border);border-radius:8px;padding:10px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex:1">Fórmula ${idx+1}</span>
+        <button onclick="deRemoveFormula('${wuid}',${idx})" style="color:var(--muted);padding:2px">
+          <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+        <div>
+          <p class="field-label">Função</p>
+          <select class="field-input de-fml-fn" style="font-size:12px">${fnOpts}</select>
+        </div>
+        <div>
+          <p class="field-label">Campo</p>
+          <input class="field-input de-fml-field" type="text" placeholder="nome_coluna" style="font-size:12px" value="${esc(formula.field)}">
+        </div>
+      </div>
+      <p class="field-label" style="margin-bottom:4px">Filtros desta fórmula</p>
+      <div class="de-fml-filters" id="de-fmlfilters-${wuid}-${idx}">
+        ${filtersHtml}
+      </div>
+      <button onclick="deAddFormulaFilter('${wuid}',${idx})" class="pe-add-btn" style="width:fit-content;margin-top:4px;font-size:11px;padding:4px 8px">
+        <i data-lucide="plus" class="w-3 h-3"></i> Filtro
+      </button>
+    </div>
+  `;
+}
+
+function buildDeFilterHtml(wuid, key, idx, fi) {
+  fi = fi || { bool:'AND', field:'', op:'=', value:'' };
+  const boolOpts = DE_BOOL.map(b => `<option value="${b}" ${fi.bool===b?'selected':''}>${b}</option>`).join('');
+  const opOpts   = DE_OPS.map(o  => `<option value="${o}"  ${fi.op===o?'selected':''}>${o}</option>`).join('');
+  const noVal    = ['está vazio','não está vazio'].includes(fi.op);
+  return `
+    <div class="de-filter-row" data-filter-idx="${idx}" style="display:flex;gap:4px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+      ${idx > 0 ? `<select class="de-bool-sel" style="width:58px;border:1px solid var(--border);border-radius:6px;font-size:11px;padding:3px 4px">${boolOpts}</select>` : '<span style="width:58px;font-size:11px;color:var(--muted);text-align:center">ONDE</span>'}
+      <input class="de-filter-field" type="text" placeholder="campo" value="${esc(fi.field)}" style="flex:1;min-width:80px;border:1px solid var(--border);border-radius:6px;font-size:11px;padding:4px 6px">
+      <select class="de-filter-op" style="border:1px solid var(--border);border-radius:6px;font-size:11px;padding:3px 4px" onchange="deToggleFilterValue(this)">${opOpts}</select>
+      <input class="de-filter-value" type="text" placeholder="valor" value="${esc(fi.value)}" style="flex:1;min-width:60px;border:1px solid var(--border);border-radius:6px;font-size:11px;padding:4px 6px${noVal?';display:none':''}">
+      <button onclick="${key.startsWith('fm') ? `deRemoveFormulaFilter('${wuid}',${key.slice(2)},${idx})` : `deRemoveFilter('${wuid}','${key}',${idx})`}" style="color:var(--muted);padding:2px;flex-shrink:0">
+        <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </button>
+    </div>
+  `;
+}
+
+function deToggleFilterValue(sel) {
+  const row = sel.closest('.de-filter-row');
+  const valInp = row?.querySelector('.de-filter-value');
+  if (valInp) valInp.style.display = ['está vazio','não está vazio'].includes(sel.value) ? 'none' : '';
+}
+
+// ── Filter add/remove ─────────────────────────────────
+function deAddFilter(wuid, key) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w) return;
+  w.universeFilters.push({ bool:'AND', field:'', op:'=', value:'' });
+  renderDeWidgets();
+}
+
+function deRemoveFilter(wuid, key, idx) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w) return;
+  w.universeFilters.splice(idx, 1);
+  renderDeWidgets();
+}
+
+function deAddFormula(wuid) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w) return;
+  w.formulas.push({ uid: uid(), fn:'Contar', field:'', filters:[] });
+  renderDeWidgets();
+}
+
+function deRemoveFormula(wuid, idx) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w || w.formulas.length <= 1) return;
+  w.formulas.splice(idx, 1);
+  renderDeWidgets();
+}
+
+function deAddFormulaFilter(wuid, fmlIdx) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w || !w.formulas[fmlIdx]) return;
+  w.formulas[fmlIdx].filters.push({ bool:'AND', field:'', op:'=', value:'' });
+  renderDeWidgets();
+}
+
+function deRemoveFormulaFilter(wuid, fmlIdx, filterIdx) {
+  collectDeValues();
+  const w = _deWidgets.find(w => w.uid === wuid);
+  if (!w || !w.formulas[fmlIdx]) return;
+  w.formulas[fmlIdx].filters.splice(filterIdx, 1);
+  renderDeWidgets();
+}
+
+// ── Collect values ────────────────────────────────────
+function collectDeValues() {
+  _deWidgets.forEach(w => {
+    const body = document.getElementById(`de-body-${w.uid}`);
+    if (!body) return;
+
+    w.title       = body.querySelector('.de-title-inp')?.value || '';
+    w.chart       = body.querySelector('.de-chart-sel')?.value || 'Coluna';
+    const descEl  = document.getElementById(`de-desc-${w.uid}`);
+    w.description = descEl ? sanitizeHtml(descEl.innerHTML, ['B','STRONG','A','UL','OL','LI','BR','P']) : '';
+
+    // Collect filters helper
+    function collectFilters(containerId) {
+      return [...document.querySelectorAll(`#${containerId} .de-filter-row`)].map(row => ({
+        bool:  row.querySelector('.de-bool-sel')?.value     || 'AND',
+        field: row.querySelector('.de-filter-field')?.value || '',
+        op:    row.querySelector('.de-filter-op')?.value    || '=',
+        value: row.querySelector('.de-filter-value')?.value || '',
+      }));
+    }
+
+    // Universe filters
+    w.universeFilters = collectFilters(`de-ufilters-${w.uid}`);
+
+    // Formulas
+    const fmlBlocks = [...body.querySelectorAll('.de-formula-block')];
+    w.formulas = fmlBlocks.map((blk, idx) => ({
+      uid:     w.formulas[idx]?.uid || uid(),
+      fn:      blk.querySelector('.de-fml-fn')?.value    || 'Contar',
+      field:   blk.querySelector('.de-fml-field')?.value || '',
+      filters: collectFilters(`de-fmlfilters-${w.uid}-${idx}`),
+    }));
+  });
+}
+
+// ── Drag to reorder widgets ───────────────────────────
+function setupDeDrag(list) {
+  if (!_deIndicator) {
+    _deIndicator = document.createElement('div');
+    _deIndicator.className = 'drop-indicator hidden';
+    document.body.appendChild(_deIndicator);
+  }
+  list.querySelectorAll('[data-de-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      startDeDrag(handle.dataset.deDrag, handle.closest('.pe-section'), e);
+    });
+  });
+}
+
+function startDeDrag(wuid, rowEl, startEvt) {
+  collectDeValues();
+  const ghost = rowEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${rowEl.offsetWidth}px;opacity:.8;box-shadow:0 8px 24px rgba(0,0,0,.15);border-radius:10px;background:#fff;transform:rotate(0.5deg)`;
+  document.body.appendChild(ghost);
+  rowEl.style.opacity = '0.35';
+
+  function posGhost(e) { ghost.style.left=`${e.clientX-20}px`; ghost.style.top=`${e.clientY-24}px`; }
+  posGhost(startEvt);
+
+  function onMove(e) {
+    posGhost(e);
+    const rows = [...document.querySelectorAll('#de-widgets-list .pe-section')].filter(r => r.dataset.uid !== wuid);
+    if (!rows.length) { _deIndicator.classList.add('hidden'); return; }
+    let best=null, bestDist=Infinity;
+    for (const r of rows) {
+      const rect = r.getBoundingClientRect();
+      const dist = Math.abs(e.clientY-(rect.top+rect.height/2));
+      if (dist < bestDist) { bestDist=dist; best=r; }
+    }
+    const rect = best.getBoundingClientRect();
+    const after = e.clientY > rect.top+rect.height/2;
+    const listRect = document.getElementById('de-widgets-list').getBoundingClientRect();
+    _deIndicator.classList.remove('hidden');
+    Object.assign(_deIndicator.style, { position:'fixed', top:`${after?rect.bottom:rect.top}px`, left:`${listRect.left+8}px`, width:`${listRect.width-16}px` });
+    _deDragState = { wuid, refUid: best.dataset.uid, after };
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    ghost.remove(); rowEl.style.opacity='';
+    _deIndicator.classList.add('hidden');
+    if (_deDragState) {
+      const { wuid:mUid, refUid, after } = _deDragState;
+      const srcIdx = _deWidgets.findIndex(w => w.uid===mUid);
+      const [moved] = _deWidgets.splice(srcIdx,1);
+      let dstIdx = _deWidgets.findIndex(w => w.uid===refUid);
+      if (after) dstIdx+=1;
+      _deWidgets.splice(dstIdx,0,moved);
+      _deDragState=null; renderDeWidgets();
+    }
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ══════════════════════════════════════════════════════
+// FORM EDITOR
+// ══════════════════════════════════════════════════════
+const FE_VALIDATORS = ['CPF','CNPJ','E-mail','URL','CEP','Telefone','RG','Passaporte'];
+
+const FE_TYPE_META = {
+  text:      { label:'Linha única',      icon:'minus' },
+  textarea:  { label:'Várias linhas',    icon:'align-left' },
+  number:    { label:'Número',           icon:'hash' },
+  date:      { label:'Data',             icon:'calendar' },
+  time:      { label:'Hora',             icon:'clock' },
+  datetime:  { label:'Data e hora',      icon:'calendar-clock' },
+  daterange: { label:'Intervalo de data',icon:'calendar-range' },
+  timerange: { label:'Intervalo de hora',icon:'timer' },
+  radio:     { label:'Rádio / Select',   icon:'circle-dot' },
+  checklist: { label:'Checklist',        icon:'check-square' },
+};
+
+let _feFields  = [];
+let _feItemUid = null;
+let _feDragState  = null;
+let _feIndicator  = null;
+
+// ── Open / close / save ───────────────────────────────
+function openFormEditor() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  _feItemUid = item.uid;
+  _feFields  = JSON.parse(JSON.stringify(item.formFields || []));
+  document.getElementById('fe-block-name').textContent = item.title || 'Editor de Formulário';
+  document.getElementById('fe-table').value = item.table || '';
+  renderFeFields();
+  document.getElementById('form-editor-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeFormEditor(e) {
+  if (e && e.target !== document.getElementById('form-editor-modal')) return;
+  document.getElementById('form-editor-modal').classList.add('hidden');
+}
+
+function saveFormEditor() {
+  collectFeValues();
+  const item = findBlock(_feItemUid);
+
+  if (item) {
+    item.formFields = _feFields;
+    item.table = document.getElementById('fe-table').value || '';
+    commit(); 
+  }
+
+  document.getElementById('form-editor-modal').classList.add('hidden');
+}
+
+// ── Add / remove fields ───────────────────────────────
+function feAddField(type) {
+  collectFeValues();
+  const base = { uid: uid(), type, name:'', label:'', placeholder:'', required: false };
+  if (type === 'text')      { base.searchRole = 'none'; base.validators = []; }
+  if (type === 'textarea')  { base.htmlMode = false; }
+  if (type === 'number')    { base.min = ''; base.max = ''; base.step = ''; }
+  if (type === 'date' || type === 'time' || type === 'datetime') { base.min = ''; base.max = ''; }
+  if (type === 'radio' || type === 'checklist') { base.options = [{uid:uid(),label:'',value:''}]; base.asSelect = false; }
+  if (type === 'checklist') { base.minSelect = ''; base.maxSelect = ''; }
+  _feFields.push(base);
+  renderFeFields();
+  setTimeout(() => {
+    const list = document.getElementById('fe-fields-list');
+    list.scrollTop = list.scrollHeight;
+  }, 50);
+}
+
+function feRemoveField(uid2) {
+  collectFeValues();
+  _feFields = _feFields.filter(f => f.uid !== uid2);
+  renderFeFields();
+}
+
+// ── Render ────────────────────────────────────────────
+function renderFeFields() {
+  const list  = document.getElementById('fe-fields-list');
+  const empty = document.getElementById('fe-empty');
+  [...list.children].forEach(ch => { if (ch.id !== 'fe-empty') ch.remove(); });
+  empty.style.display = _feFields.length ? 'none' : 'flex';
+  _feFields.forEach(f => list.appendChild(buildFeField(f)));
+  setupFeDrag(list);
+  lucide.createIcons();
+}
+
+function buildFeField(f) {
+  const meta = FE_TYPE_META[f.type] || { label: f.type, icon:'square' };
+  const wrap = document.createElement('div');
+  wrap.className = 'pe-section';
+  wrap.dataset.uid = f.uid;
+  wrap.style.flexShrink = '0';
+
+  // ── Header ──
+  wrap.innerHTML = `
+    <div class="pe-section-header">
+      <span class="pe-drag-handle" data-fe-drag="${f.uid}">
+        <i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i>
+      </span>
+      <i data-lucide="${meta.icon}" class="w-3.5 h-3.5 shrink-0" style="color:var(--muted)"></i>
+      <span class="pe-section-type">${meta.label}</span>
+      <button class="pe-remove-btn" onclick="feRemoveField('${f.uid}')">
+        <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </button>
+    </div>
+    <div class="pe-section-body" id="fe-body-${f.uid}"></div>
+  `;
+
+  const body = wrap.querySelector(`#fe-body-${f.uid}`);
+  body.appendChild(buildFeBody(f));
+  return wrap;
+}
+
+function buildFeBody(f) {
+  const frag = document.createDocumentFragment();
+
+  // ── Common: label, name, required ──
+  const common = document.createElement('div');
+  common.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px';
+  common.innerHTML = `
+    <div>
+      <p class="field-label">Label</p>
+      <input class="field-input fe-label-inp" type="text" placeholder="Texto visível" value="${esc(f.label)}">
+    </div>
+    <div>
+      <p class="field-label">Name <span style="color:#ef4444">*</span></p>
+      <input class="field-input fe-name-inp" type="text" placeholder="campo_nome" value="${esc(f.name)}">
+    </div>
+  `;
+  frag.appendChild(common);
+
+  // Placeholder (not for date/time types or radio/checklist)
+  if (!['date','time','datetime','daterange','timerange','radio','checklist'].includes(f.type)) {
+    const ph = document.createElement('div');
+    ph.style.marginBottom = '10px';
+    ph.innerHTML = `<p class="field-label">Placeholder</p>
+      <input class="field-input fe-placeholder-inp" type="text" placeholder="Texto de exemplo" value="${esc(f.placeholder)}">`;
+    frag.appendChild(ph);
+  }
+
+  // ── Type-specific fields ──
+  const specific = document.createElement('div');
+  specific.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+
+  if (f.type === 'text') {
+    specific.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><p class="field-label">Mín. caracteres</p><input class="field-input fe-minlen-inp" type="number" min="0" placeholder="0" value="${esc(f.minLen)}"></div>
+        <div><p class="field-label">Máx. caracteres</p><input class="field-input fe-maxlen-inp" type="number" min="0" placeholder="∞" value="${esc(f.maxLen)}"></div>
+      </div>
+      <div>
+        <p class="field-label">Papel na busca</p>
+        <select class="field-input fe-searchrole-sel">
+          <option value="none" ${f.searchRole==='none'?'selected':''}>Nenhum</option>
+          <option value="title" ${f.searchRole==='title'?'selected':''}>Título do resultado</option>
+          <option value="description" ${f.searchRole==='description'?'selected':''}>Descrição do resultado</option>
+        </select>
+      </div>
+      <div>
+        <p class="field-label">Validadores</p>
+        <div class="fe-validators-wrap" style="display:flex;flex-wrap:wrap;gap:6px">
+          ${FE_VALIDATORS.map(v => `
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer">
+              <input type="checkbox" class="fe-validator-chk" value="${v}" ${(f.validators||[]).includes(v)?'checked':''}>
+              ${v}
+            </label>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (f.type === 'textarea') {
+    specific.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><p class="field-label">Mín. caracteres</p><input class="field-input fe-minlen-inp" type="number" min="0" placeholder="0" value="${esc(f.minLen)}"></div>
+        <div><p class="field-label">Máx. caracteres</p><input class="field-input fe-maxlen-inp" type="number" min="0" placeholder="∞" value="${esc(f.maxLen)}"></div>
+      </div>
+      <label class="switch-row" style="border:none;padding:4px 0">
+        <span class="text-sm">Modo HTML (editor rico)</span>
+        <div class="toggle-wrap"><input type="checkbox" class="fe-htmlmode-sw" ${f.htmlMode?'checked':''}><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+      </label>
+    `;
+  }
+
+  if (f.type === 'number') {
+    specific.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div><p class="field-label">Mínimo</p><input class="field-input fe-min-inp" type="number" placeholder="–" value="${esc(f.min)}"></div>
+        <div><p class="field-label">Máximo</p><input class="field-input fe-max-inp" type="number" placeholder="–" value="${esc(f.max)}"></div>
+        <div><p class="field-label">Step</p><input class="field-input fe-step-inp" type="number" placeholder="1" value="${esc(f.step)}"></div>
+      </div>
+    `;
+  }
+
+  if (['date','time','datetime'].includes(f.type)) {
+    const inputType = f.type === 'datetime' ? 'datetime-local' : f.type;
+    specific.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><p class="field-label">Mínimo</p><input class="field-input fe-min-inp" type="${inputType}" value="${esc(f.min)}"></div>
+        <div><p class="field-label">Máximo</p><input class="field-input fe-max-inp" type="${inputType}" value="${esc(f.max)}"></div>
+      </div>
+    `;
+  }
+
+  if (['daterange','timerange'].includes(f.type)) {
+    specific.innerHTML = `<p class="text-xs" style="color:var(--muted)">Permite selecionar um intervalo de ${f.type === 'daterange' ? 'datas' : 'horas'}.</p>`;
+  }
+
+  if (f.type === 'radio' || f.type === 'checklist') {
+    const optHtml = (f.options || []).map((opt, i) => `
+      <div class="fe-option-row" data-opt-idx="${i}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <input class="field-input fe-opt-label" type="text" placeholder="Label" value="${esc(opt.label)}" style="flex:1">
+        <input class="field-input fe-opt-value" type="text" placeholder="Value" value="${esc(opt.value)}" style="flex:1">
+        <button onclick="feRemoveOption('${f.uid}',${i})" style="color:var(--muted);padding:4px;flex-shrink:0">
+          <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+        </button>
+      </div>`).join('');
+
+    const checklistExtra = f.type === 'checklist' ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div><p class="field-label">Mín. selecionados</p><input class="field-input fe-minsel-inp" type="number" min="0" placeholder="0" value="${esc(f.minSelect)}"></div>
+        <div><p class="field-label">Máx. selecionados</p><input class="field-input fe-maxsel-inp" type="number" min="0" placeholder="∞" value="${esc(f.maxSelect)}"></div>
+      </div>` : '';
+
+    const selectSwitch = f.type === 'radio' ? `
+      <label class="switch-row" style="border:none;padding:4px 0;margin-bottom:4px">
+        <span class="text-sm">Exibir como Select</span>
+        <div class="toggle-wrap"><input type="checkbox" class="fe-asselect-sw" ${f.asSelect?'checked':''}><span class="toggle-track"><span class="toggle-thumb"></span></span></div>
+      </label>` : '';
+
+    specific.innerHTML = `
+      ${selectSwitch}
+      <p class="field-label">Opções</p>
+      <div class="fe-options-wrap">${optHtml}</div>
+      <button onclick="feAddOption('${f.uid}')" class="pe-add-btn" style="width:fit-content">
+        <i data-lucide="plus" class="w-3 h-3"></i> Opção
+      </button>
+      ${checklistExtra}
+    `;
+  }
+
+  if (specific.innerHTML) frag.appendChild(specific);
+
+  // ── Required switch (always last) ──
+  const req = document.createElement('label');
+  req.className = 'switch-row';
+  req.style.cssText = 'border:none;padding:6px 0 0;margin-top:4px';
+  req.innerHTML = `
+    <span class="text-sm font-medium">Obrigatório</span>
+    <div class="toggle-wrap">
+      <input type="checkbox" class="fe-required-sw" ${f.required?'checked':''}>
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+    </div>
+  `;
+  frag.appendChild(req);
+
+  return frag;
+}
+
+function esc(v) { return (v === undefined || v === null) ? '' : String(v).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ── Options management ────────────────────────────────
+function feAddOption(fieldUid) {
+  collectFeValues();
+  const f = _feFields.find(f => f.uid === fieldUid);
+  if (f) { f.options.push({ uid: uid(), label:'', value:'' }); renderFeFields(); }
+}
+
+function feRemoveOption(fieldUid, idx) {
+  collectFeValues();
+  const f = _feFields.find(f => f.uid === fieldUid);
+  if (f && f.options.length > 1) { f.options.splice(idx, 1); renderFeFields(); }
+}
+
+// ── Collect values from DOM ───────────────────────────
+function collectFeValues() {
+  _feFields.forEach(f => {
+    const body = document.getElementById(`fe-body-${f.uid}`);
+    if (!body) return;
+
+    f.label       = body.querySelector('.fe-label-inp')?.value       || '';
+    f.name        = body.querySelector('.fe-name-inp')?.value        || '';
+    f.placeholder = body.querySelector('.fe-placeholder-inp')?.value || '';
+    f.required    = body.querySelector('.fe-required-sw')?.checked   || false;
+
+    if (f.type === 'text') {
+      f.minLen     = body.querySelector('.fe-minlen-inp')?.value  || '';
+      f.maxLen     = body.querySelector('.fe-maxlen-inp')?.value  || '';
+      f.searchRole = body.querySelector('.fe-searchrole-sel')?.value || 'none';
+      f.validators = [...body.querySelectorAll('.fe-validator-chk:checked')].map(c => c.value);
+    }
+    if (f.type === 'textarea') {
+      f.minLen   = body.querySelector('.fe-minlen-inp')?.value || '';
+      f.maxLen   = body.querySelector('.fe-maxlen-inp')?.value || '';
+      f.htmlMode = body.querySelector('.fe-htmlmode-sw')?.checked || false;
+    }
+    if (['number','date','time','datetime'].includes(f.type)) {
+      f.min  = body.querySelector('.fe-min-inp')?.value  || '';
+      f.max  = body.querySelector('.fe-max-inp')?.value  || '';
+      if (f.type === 'number') f.step = body.querySelector('.fe-step-inp')?.value || '';
+    }
+    if (f.type === 'radio' || f.type === 'checklist') {
+      const rows = [...body.querySelectorAll('.fe-option-row')];
+      f.options = rows.map((row, i) => ({
+        uid:   f.options[i]?.uid || uid(),
+        label: row.querySelector('.fe-opt-label')?.value || '',
+        value: row.querySelector('.fe-opt-value')?.value || '',
+      }));
+      if (f.type === 'radio')     f.asSelect  = body.querySelector('.fe-asselect-sw')?.checked  || false;
+      if (f.type === 'checklist') {
+        f.minSelect = body.querySelector('.fe-minsel-inp')?.value || '';
+        f.maxSelect = body.querySelector('.fe-maxsel-inp')?.value || '';
+      }
+    }
+  });
+}
+
+// ── Drag to reorder fields ────────────────────────────
+function setupFeDrag(list) {
+  if (!_feIndicator) {
+    _feIndicator = document.createElement('div');
+    _feIndicator.className = 'drop-indicator hidden';
+    document.body.appendChild(_feIndicator);
+  }
+  list.querySelectorAll('[data-fe-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      startFeDrag(handle.dataset.feDrag, handle.closest('.pe-section'), e);
+    });
+  });
+}
+
+function startFeDrag(fieldUid, rowEl, startEvt) {
+  collectFeValues();
+  const ghost = rowEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${rowEl.offsetWidth}px;opacity:.8;box-shadow:0 8px 24px rgba(0,0,0,.15);border-radius:10px;background:#fff;transform:rotate(0.5deg)`;
+  document.body.appendChild(ghost);
+  rowEl.style.opacity = '0.35';
+
+  function posGhost(e) { ghost.style.left=`${e.clientX-20}px`; ghost.style.top=`${e.clientY-24}px`; }
+  posGhost(startEvt);
+
+  function onMove(e) {
+    posGhost(e);
+    const rows = [...document.querySelectorAll('#fe-fields-list .pe-section')].filter(r => r.dataset.uid !== fieldUid);
+    if (!rows.length) { _feIndicator.classList.add('hidden'); return; }
+    let best=null, bestDist=Infinity;
+    for (const r of rows) {
+      const rect = r.getBoundingClientRect();
+      const dist = Math.abs(e.clientY-(rect.top+rect.height/2));
+      if (dist < bestDist) { bestDist=dist; best=r; }
+    }
+    const rect = best.getBoundingClientRect();
+    const after = e.clientY > rect.top+rect.height/2;
+    const listRect = document.getElementById('fe-fields-list').getBoundingClientRect();
+    _feIndicator.classList.remove('hidden');
+    Object.assign(_feIndicator.style, { position:'fixed', top:`${after?rect.bottom:rect.top}px`, left:`${listRect.left+8}px`, width:`${listRect.width-16}px` });
+    _feDragState = { fieldUid, refUid: best.dataset.uid, after };
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    ghost.remove(); rowEl.style.opacity='';
+    _feIndicator.classList.add('hidden');
+    if (_feDragState) {
+      const { fieldUid:mUid, refUid, after } = _feDragState;
+      const srcIdx = _feFields.findIndex(f => f.uid===mUid);
+      const [moved] = _feFields.splice(srcIdx,1);
+      let dstIdx = _feFields.findIndex(f => f.uid===refUid);
+      if (after) dstIdx+=1;
+      _feFields.splice(dstIdx,0,moved);
+      _feDragState=null; renderFeFields();
+    }
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ══════════════════════════════════════════════════════
+// LIST EDITOR
+// ══════════════════════════════════════════════════════
+let _leItems   = [];
+let _leItemUid = null;
+let _leDragState  = null;
+let _leIndicator  = null;
+
+function openListEditor() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  _leItemUid = item.uid;
+  _leItems   = JSON.parse(JSON.stringify(item.listItems || []));
+  const cfg  = item.listConfig || {};
+
+  document.getElementById('le-block-name').textContent = item.title   || 'Editor de Lista';
+  document.getElementById('le-table').value            = cfg.table    || '';
+  document.getElementById('le-table-category').value   = cfg.category || '';
+  document.getElementById('le-sw-simple').checked      = cfg.simple   || false;
+  document.getElementById('le-sw-static').checked      = cfg.static   || false;
+  document.getElementById('le-sw-grid').checked        = cfg.grid     || false;
+  document.getElementById('le-sw-search').checked      = cfg.search   || false;
+  document.getElementById('le-sw-flat').checked        = cfg.flat     || false;
+
+  renderLeItems();
+  document.getElementById('list-editor-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeListEditor(e) {
+  if (e && e.target !== document.getElementById('list-editor-modal')) return;
+  document.getElementById('list-editor-modal').classList.add('hidden');
+}
+
+function saveListEditor() {
+  collectLeItemValues();
+  const item = findBlock(_leItemUid);
+  if (!item) return;
+  item.listItems = _leItems;
+  item.listConfig = {
+    table:  document.getElementById('le-table').value,
+    category:  document.getElementById('le-table-category').value,
+    simple: document.getElementById('le-sw-simple').checked,
+    static: document.getElementById('le-sw-static').checked,
+    grid:   document.getElementById('le-sw-grid').checked,
+    search: document.getElementById('le-sw-search').checked,
+    flat: document.getElementById('le-sw-flat').checked,
+  };
+  commit();
+  document.getElementById('list-editor-modal').classList.add('hidden');
+}
+
+function collectLeItemValues() {
+  _leItems.forEach(it => {
+    const body = document.getElementById(`le-body-${it.uid}`);
+    if (!body) return;
+    it.title       = body.querySelector('.le-title-inp')?.value     || '';
+    it.description = body.querySelector('.le-desc-inp')?.value      || '';
+    it.target      = body.querySelector('.le-target-select')?.value || '';
+    // icon is written live by handleLeIcon
+  });
+}
+
+function leAddItem() {
+  collectLeItemValues();
+  _leItems.push({ uid: uid(), title: '', description: '', icon: null });
+  renderLeItems();
+  // scroll to bottom
+  const list = document.getElementById('le-items-list');
+  setTimeout(() => list.scrollTop = list.scrollHeight, 50);
+}
+
+function leRemoveItem(uid2) {
+  collectLeItemValues();
+  _leItems = _leItems.filter(i => i.uid !== uid2);
+  renderLeItems();
+}
+
+function renderLeItems() {
+  const list  = document.getElementById('le-items-list');
+  const empty = document.getElementById('le-empty');
+  [...list.children].forEach(ch => { if (ch.id !== 'le-empty') ch.remove(); });
+  empty.style.display = _leItems.length ? 'none' : 'flex';
+
+  _leItems.forEach(it => list.appendChild(buildLeItem(it)));
+  setupLeDrag(list);
+  lucide.createIcons();
+}
+
+function buildLeItem(it) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pe-section';
+  wrap.dataset.uid = it.uid;
+  wrap.style.flexShrink = '0';
+
+  wrap.innerHTML = `
+    <div class="pe-section-header">
+      <span class="pe-drag-handle" data-le-drag="${it.uid}">
+        <i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i>
+      </span>
+      <span class="pe-section-type">Item</span>
+      <button class="pe-remove-btn" onclick="leRemoveItem('${it.uid}')">
+        <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </button>
+    </div>
+    <div class="pe-section-body" id="le-body-${it.uid}">
+      <div class="flex gap-3 items-start">
+        <!-- Icon upload -->
+        <div class="flex flex-col items-center gap-1 shrink-0">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+            style="background:#f4f4f5;border:1px solid var(--border)" onclick="triggerUpload('le-icon-${it.uid}')">
+            ${it.icon
+              ? `<img src="${it.icon}" class="w-12 h-12 rounded-xl object-cover">`
+              : `<i data-lucide="image" class="w-5 h-5" style="color:var(--muted)"></i>`
+            }
+          </div>
+          <span class="text-xs" style="color:var(--muted)">Ícone</span>
+          <input type="file" id="le-icon-${it.uid}" class="hidden" accept=".png,.jpg,.jpeg,.webp"
+            onchange="handleLeIcon(this,'${it.uid}')">
+        </div>
+        <!-- Fields -->
+        <div class="flex flex-col gap-2 flex-1">
+          <div>
+            <p class="field-label">Título</p>
+            <input class="field-input le-title-inp" type="text" placeholder="Título do item" value="${(it.title||'').replace(/"/g,'&quot;')}">
+          </div>
+          <div>
+            <p class="field-label">Descrição</p>
+            <input class="field-input le-desc-inp" type="text" placeholder="Descrição curta" value="${(it.description||'').replace(/"/g,'&quot;')}">
+          </div>
+          <div>
+            <p class="field-label">Ação ao clicar</p>
+            <select class="field-input fe-searchrole-sel le-target-select" type="text" value="${(it.target||'').replace(/"/g,'&quot;')}">
+              <option value="Fazer nada">Não fazer nada</option>
+              <option value="Abrir detalhes">Detalhar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const select = wrap.querySelector(".le-target-select");
+
+  const iter = (b) => {
+    if (!Array.isArray(b.children) || b.children.length === 0) {
+      const option = select.appendChild(document.createElement("option"));
+      option.value = b.uid;
+      option.textContent = `${b.title} (${b.uid})`;
+      return;
+    }
+
+    b.children.forEach(iter);
+  };
+
+  window.appState.blocks.forEach(iter);
+  return wrap;
+}
+
+function handleLeIcon(input, itemUid) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    collectLeItemValues();
+    const it = _leItems.find(i => i.uid === itemUid);
+    if (!it) return;
+    it.icon = e.target.result;
+    renderLeItems();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Drag to reorder list items ────────────────────────────────────────────────
+function setupLeDrag(list) {
+  if (!_leIndicator) {
+    _leIndicator = document.createElement('div');
+    _leIndicator.className = 'drop-indicator hidden';
+    document.body.appendChild(_leIndicator);
+  }
+  list.querySelectorAll('[data-le-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const itemUid = handle.dataset.leDrag;
+      const rowEl   = handle.closest('.pe-section');
+      startLeDrag(itemUid, rowEl, e);
+    });
+  });
+}
+
+function startLeDrag(itemUid, rowEl, startEvt) {
+  collectLeItemValues();
+  const ghost = rowEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${rowEl.offsetWidth}px;opacity:.8;box-shadow:0 8px 24px rgba(0,0,0,.15);border-radius:10px;background:#fff;transform:rotate(1deg)`;
+  document.body.appendChild(ghost);
+  rowEl.style.opacity = '0.35';
+
+  function posGhost(e) {
+    ghost.style.left = `${e.clientX - 20}px`;
+    ghost.style.top  = `${e.clientY - 24}px`;
+  }
+  posGhost(startEvt);
+
+  function onMove(e) {
+    posGhost(e);
+    const rows = [...document.querySelectorAll('#le-items-list .pe-section')].filter(r => r.dataset.uid !== itemUid);
+    if (!rows.length) { _leIndicator.classList.add('hidden'); return; }
+    let best = null, bestDist = Infinity;
+    for (const r of rows) {
+      const rect = r.getBoundingClientRect();
+      const dist = Math.abs(e.clientY - (rect.top + rect.height / 2));
+      if (dist < bestDist) { bestDist = dist; best = r; }
+    }
+    const rect     = best.getBoundingClientRect();
+    const after    = e.clientY > rect.top + rect.height / 2;
+    const listRect = document.getElementById('le-items-list').getBoundingClientRect();
+    _leIndicator.classList.remove('hidden');
+    Object.assign(_leIndicator.style, {
+      position:'fixed', top:`${after ? rect.bottom : rect.top}px`,
+      left:`${listRect.left + 8}px`, width:`${listRect.width - 16}px`
+    });
+    _leDragState = { itemUid, refUid: best.dataset.uid, after };
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    ghost.remove();
+    rowEl.style.opacity = '';
+    _leIndicator.classList.add('hidden');
+    if (_leDragState) {
+      const { itemUid: mUid, refUid, after } = _leDragState;
+      const srcIdx = _leItems.findIndex(i => i.uid === mUid);
+      const [moved] = _leItems.splice(srcIdx, 1);
+      let dstIdx = _leItems.findIndex(i => i.uid === refUid);
+      if (after) dstIdx += 1;
+      _leItems.splice(dstIdx, 0, moved);
+      _leDragState = null;
+      renderLeItems();
+    }
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ══════════════════════════════════════════════════════
+// PAGE EDITOR
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+// PAGE EDITOR
+// ══════════════════════════════════════════════════════
+const PE_FONTS = [
+  { label:'Sistema',  value:'system-ui, sans-serif' },
+  { label:'Serif',    value:'Georgia, serif' },
+  { label:'Mono',     value:'monospace' },
+  { label:'Sans',     value:'Arial, sans-serif' },
+  { label:'Rounded',  value:'Nunito, sans-serif' },
+];
+
+let _peSections   = [];   // working copy while modal is open
+let _peItemUid    = null; // which page block we're editing
+let _peDragState  = null;
+let _peIndicator  = null;
+
+function openPageEditor() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  _peItemUid  = item.uid;
+  _peSections = JSON.parse(JSON.stringify(item.pageSections || []));
+  document.getElementById('pe-block-name').textContent = item.title || 'Editor de Página';
+  renderPeSections();
+  document.getElementById('page-editor-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+let _peAllCollapsed = false;
+
+function peToggleAll() {
+  collectPeSectionValues();
+  _peAllCollapsed = !_peAllCollapsed;
+
+  document.querySelectorAll('#pe-sections-list .pe-section-body').forEach(body => {
+    body.style.display = _peAllCollapsed ? 'none' : '';
+  });
+
+  const label = document.getElementById('pe-toggle-all-label');
+  if (label) label.textContent = _peAllCollapsed ? 'Expandir' : 'Colapsar';
+  lucide.createIcons();
+}
+
+function closePageEditor(e) {
+  if (e && e.target !== document.getElementById('page-editor-modal')) return;
+  document.getElementById('page-editor-modal').classList.add('hidden');
+}
+
+function savePageEditor() {
+  // Collect current values from DOM before saving
+  collectPeSectionValues();
+  const item = findBlock(_peItemUid);
+  if (item) { item.pageSections = _peSections; commit(); }
+  document.getElementById('page-editor-modal').classList.add('hidden');
+}
+
+function collectPeSectionValues() {
+  _peSections.forEach(sec => {
+    const body = document.getElementById(`pe-body-${sec.uid}`);
+    if (!body) return;
+
+    sec.title = body.querySelector('.pe-title-inp')?.value || '';
+
+    if (sec.type === 'image') {
+      sec.imageUrl = body.querySelector('.pe-image-url')?.value || sec.imageUrl || '';
+      const ed = body.querySelector('.html-editable');
+      if (ed) sec.body = sanitizeHtml(ed.innerHTML, ['B','STRONG','A','UL','OL','LI','BR','P']);
+    }
+    if (sec.type === 'youtube') {
+      sec.ytUrl    = body.querySelector('.pe-yt-url')?.value   || '';
+      sec.imageUrl = body.querySelector('.pe-image-url')?.value || sec.imageUrl || '';
+      const ed = body.querySelector('.html-editable');
+      if (ed) sec.body = sanitizeHtml(ed.innerHTML, ['B','STRONG','A','UL','OL','LI','BR','P']);
+    }
+    if (sec.type === 'code') {
+      sec.code = body.querySelector('.pe-code-inp')?.value || '';
+      const ed = body.querySelector('.html-editable');
+      if (ed) sec.body = sanitizeHtml(ed.innerHTML, ['B','STRONG','A','UL','OL','LI','BR','P']);
+    }
+    if (sec.type === 'chart') {
+      sec.chartType = body.querySelector('.pe-chart-type')?.value || 'Coluna';
+      const rows = [...body.querySelectorAll('.pe-chart-row')];
+      sec.chartData = rows.map(r => ({
+        key:   r.querySelector('.pe-chart-key')?.value   || '',
+        value: r.querySelector('.pe-chart-val')?.value   || '',
+      }));
+      const ed = body.querySelector('.html-editable');
+      if (ed) sec.body = sanitizeHtml(ed.innerHTML, ['B','STRONG','A','UL','OL','LI','BR','P']);
+    }
+
+    const fontSel  = body.querySelector('.pe-font-sel');
+    const colorInp = body.querySelector('.pe-color-inp');
+    const bgInp    = body.querySelector('.pe-bg-inp');
+    if (fontSel)  sec.font    = fontSel.value;
+    if (colorInp) sec.color   = colorInp.value;
+    if (bgInp)    sec.bgColor = bgInp.value;
+  });
+}
+
+function peAddSection(type) {
+  collectPeSectionValues();
+  const sec = { uid: uid(), type, title: '', font: PE_FONTS[0].value, color: '#000000', bgColor: '#ffffff' };
+  if (type === 'image')   { sec.imageUrl = ''; sec.body = ''; }
+  if (type === 'youtube') { sec.imageUrl = ''; sec.body = ''; sec.ytUrl = ''; }
+  if (type === 'code')    { sec.code = ''; sec.body = ''; }
+  if (type === 'chart')   { sec.chartType = 'Coluna'; sec.chartData = [{key:'',value:''}]; sec.body = ''; }
+  _peSections.push(sec);
+  renderPeSections();
+  // Scroll to bottom
+  const list = document.getElementById('pe-sections-list');
+  list.scrollTop = list.scrollHeight;
+}
+
+function peRemoveSection(uid2) {
+  collectPeSectionValues();
+  _peSections = _peSections.filter(s => s.uid !== uid2);
+  renderPeSections();
+}
+
+function renderPeSections() {
+  const list  = document.getElementById('pe-sections-list');
+  const empty = document.getElementById('pe-empty');
+  // Remove all section elements (keep pe-empty)
+  [...list.children].forEach(ch => { if (ch.id !== 'pe-empty') ch.remove(); });
+  empty.style.display = _peSections.length ? 'none' : 'flex';
+
+  _peSections.forEach((sec, idx) => {
+    const el = buildPeSection(sec, idx);
+    list.appendChild(el);
+  });
+
+  setupPeDrag(list);
+  lucide.createIcons();
+}
+
+const PE_TYPE_LABELS = { image:'Imagem', youtube:'YouTube', code:'Código', chart:'Gráfico' };
+
+function buildPeSection(sec, idx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pe-section';
+  wrap.dataset.uid = sec.uid;
+
+  // ── Header ──
+  const header = document.createElement('div');
+  header.className = 'pe-section-header';
+  header.innerHTML = `
+    <span class="pe-drag-handle" data-pe-drag="${sec.uid}"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></span>
+    <span class="pe-section-type">${PE_TYPE_LABELS[sec.type] || sec.type}</span>
+    <button class="pe-remove-btn" onclick="peRemoveSection('${sec.uid}')"><i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i></button>
+  `;
+
+  // ── Body ──
+  const body = document.createElement('div');
+  body.className = 'pe-section-body';
+  body.id = `pe-body-${sec.uid}`;
+
+  // Content input
+  const contentEl = buildPeContentInput(sec);
+  body.appendChild(contentEl);
+
+  // Style row
+  const fontOptions = PE_FONTS.map(f => `<option value="${f.value}" ${sec.font === f.value ? 'selected' : ''}>${f.label}</option>`).join('');
+  const styleRow = document.createElement('div');
+  styleRow.className = 'pe-style-row';
+  styleRow.innerHTML = `
+    <span class="pe-style-label">Fonte</span>
+    <select class="pe-font-sel" style="flex:1;font-size:11px">${fontOptions}</select>
+    <span class="pe-style-label">Texto</span>
+    <input type="color" class="pe-color-inp" value="${sec.color || '#000000'}">
+    <span class="pe-style-label">Fundo</span>
+    <input type="color" class="pe-bg-inp" value="${sec.bgColor || '#ffffff'}">
+  `;
+  body.appendChild(styleRow);
+
+  wrap.appendChild(header);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function buildPeContentInput(sec) {
+  const wrap = document.createElement('div');
+  wrap.className = 'flex flex-col gap-3';
+
+  // ── Shared: title ──
+  wrap.innerHTML = `
+    <div>
+      <p class="field-label">Título</p>
+      <input class="field-input pe-title-inp" type="text" placeholder="Título da seção" value="${esc(sec.title)}">
+    </div>
+  `;
+
+  // ── Type-specific fields ──
+  const specific = document.createElement('div');
+  specific.className = 'flex flex-col gap-3';
+
+  if (sec.type === 'image') {
+    specific.innerHTML = `
+      <div>
+        <p class="field-label">Imagem</p>
+        <div class="flex gap-2 items-center">
+          <input class="field-input flex-1 pe-image-url" type="url" placeholder="URL da imagem" value="${esc(sec.imageUrl)}">
+          <button onclick="peTriggerImageUpload('${sec.uid}')" class="toolbar-btn shrink-0" style="height:36px;padding:0 10px">Upload</button>
+        </div>
+        <input type="file" id="pe-img-upload-${sec.uid}" class="hidden" accept=".png,.jpg,.jpeg,.gif,.webp" onchange="peSectionImageUpload(this,'${sec.uid}')">
+        ${sec.imageUrl ? `<img src="${sec.imageUrl}" class="mt-2 rounded-lg max-h-28 object-cover w-full">` : ''}
+      </div>
+    `;
+  }
+
+  if (sec.type === 'youtube') {
+    specific.innerHTML = `
+      <div>
+        <p class="field-label">URL do vídeo</p>
+        <input class="field-input pe-yt-url" type="url" placeholder="https://youtube.com/watch?v=..." value="${esc(sec.ytUrl)}">
+      </div>
+      <div>
+        <p class="field-label">Imagem de capa</p>
+        <div class="flex gap-2 items-center">
+          <input class="field-input flex-1 pe-image-url" type="url" placeholder="URL da imagem" value="${esc(sec.imageUrl)}">
+          <button onclick="peTriggerImageUpload('${sec.uid}')" class="toolbar-btn shrink-0" style="height:36px;padding:0 10px">Upload</button>
+        </div>
+        <input type="file" id="pe-img-upload-${sec.uid}" class="hidden" accept=".png,.jpg,.jpeg,.gif,.webp" onchange="peSectionImageUpload(this,'${sec.uid}')">
+        ${sec.imageUrl ? `<img src="${sec.imageUrl}" class="mt-2 rounded-lg max-h-28 object-cover w-full">` : ''}
+      </div>
+    `;
+  }
+
+  if (sec.type === 'code') {
+    specific.innerHTML = `
+      <div>
+        <p class="field-label">Código</p>
+        <textarea class="field-input pe-code-inp" rows="5" placeholder="Cole o código aqui..." style="font-family:monospace;font-size:12px;resize:vertical">${esc(sec.code)}</textarea>
+      </div>
+    `;
+  }
+
+  if (sec.type === 'chart') {
+    const chartTypes = ['Linha','Pizza','Coluna','Barras'];
+    const chartOpts  = chartTypes.map(c => `<option value="${c}" ${sec.chartType===c?'selected':''}>${c}</option>`).join('');
+    const rowsHtml   = (sec.chartData||[{key:'',value:''}]).map((r,i) => `
+      <div class="pe-chart-row flex gap-2 items-center">
+        <input class="field-input flex-1 pe-chart-key" type="text" placeholder="Chave" value="${esc(r.key)}">
+        <input class="field-input w-28 pe-chart-val" type="text" placeholder="Valor" value="${esc(r.value)}">
+        <button onclick="peRemoveChartRow('${sec.uid}',${i})" style="color:var(--muted);padding:4px;flex-shrink:0">
+          <i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>
+        </button>
+      </div>`).join('');
+    specific.innerHTML = `
+      <div>
+        <p class="field-label">Tipo de gráfico</p>
+        <select class="field-input pe-chart-type">${chartOpts}</select>
+      </div>
+      <div>
+        <p class="field-label">Dados (chave → valor)</p>
+        <div class="flex flex-col gap-1 pe-chart-rows" id="pe-chart-rows-${sec.uid}">${rowsHtml}</div>
+        <button onclick="peAddChartRow('${sec.uid}')" class="pe-add-btn mt-2" style="width:fit-content">
+          <i data-lucide="plus" class="w-3 h-3"></i> Linha
+        </button>
+      </div>
+    `;
+  }
+
+  wrap.appendChild(specific);
+
+  // ── Shared: HTML body (html simples, no headings) ──
+  const editorId = `pe-html-${sec.uid}`;
+  const bodyWrap = document.createElement('div');
+  bodyWrap.innerHTML = `
+    <p class="field-label">Texto</p>
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <div class="editor-toolbar" style="border:none;border-bottom:1px solid var(--border)">
+        <button class="toolbar-btn" onclick="editorExec('bold','${editorId}')"><b>B</b></button>
+        <button class="toolbar-btn" onclick="editorExec('insertUnorderedList','${editorId}')">&#8226; Lista</button>
+        <button class="toolbar-btn" onclick="editorExec('insertOrderedList','${editorId}')">1. Lista</button>
+        <button class="toolbar-btn" onclick="editorInsertLink('${editorId}')">&#128279;</button>
+      </div>
+      <div id="${editorId}" class="html-editable" contenteditable="true" spellcheck="false"
+        style="min-height:64px;border-radius:0;flex:none">${sec.body || ''}</div>
+    </div>
+  `;
+  wrap.appendChild(bodyWrap);
+  return wrap;
+}
+
+function peTriggerImageUpload(secUid) {
+  document.getElementById(`pe-img-upload-${secUid}`)?.click();
+}
+
+function peSectionImageUpload(input, secUid) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    collectPeSectionValues();
+    const sec = _peSections.find(s => s.uid === secUid);
+    if (sec) { sec.imageUrl = e.target.result; renderPeSections(); }
+  };
+  reader.readAsDataURL(file);
+}
+
+function peAddChartRow(secUid) {
+  collectPeSectionValues();
+  const sec = _peSections.find(s => s.uid === secUid);
+  if (sec) { sec.chartData.push({key:'',value:''}); renderPeSections(); }
+}
+
+function peRemoveChartRow(secUid, idx) {
+  collectPeSectionValues();
+  const sec = _peSections.find(s => s.uid === secUid);
+  if (sec && sec.chartData.length > 1) { sec.chartData.splice(idx,1); renderPeSections(); }
+}
+
+// ── Drag to reorder sections ──────────────────────────────────────────────────
+function setupPeDrag(list) {
+  if (!_peIndicator) {
+    _peIndicator = document.createElement('div');
+    _peIndicator.className = 'drop-indicator hidden';
+    document.body.appendChild(_peIndicator);
+  }
+
+  list.querySelectorAll('[data-pe-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const secUid = handle.dataset.peDrag;
+      const rowEl  = handle.closest('.pe-section');
+      startPeDrag(secUid, rowEl, e);
+    });
+  });
+}
+
+function startPeDrag(secUid, rowEl, startEvt) {
+  collectPeSectionValues();
+
+  const ghost = rowEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;pointer-events:none;z-index:9999;width:${rowEl.offsetWidth}px;opacity:.8;box-shadow:0 8px 24px rgba(0,0,0,.15);border-radius:10px;background:#fff;transform:rotate(1deg)`;
+  document.body.appendChild(ghost);
+
+  rowEl.style.opacity = '0.35';
+
+  function posGhost(e) {
+    ghost.style.left = `${e.clientX - 20}px`;
+    ghost.style.top  = `${e.clientY - 24}px`;
+  }
+  posGhost(startEvt);
+
+  function onMove(e) {
+    posGhost(e);
+    const rows = [...document.querySelectorAll('#pe-sections-list .pe-section')].filter(r => r.dataset.uid !== secUid);
+    if (!rows.length) { _peIndicator.classList.add('hidden'); return; }
+
+    let best = null, bestDist = Infinity;
+    for (const r of rows) {
+      const rect = r.getBoundingClientRect();
+      const dist = Math.abs(e.clientY - (rect.top + rect.height / 2));
+      if (dist < bestDist) { bestDist = dist; best = r; }
+    }
+    const rect  = best.getBoundingClientRect();
+    const after = e.clientY > rect.top + rect.height / 2;
+    const listRect = document.getElementById('pe-sections-list').getBoundingClientRect();
+
+    _peIndicator.classList.remove('hidden');
+    Object.assign(_peIndicator.style, {
+      position:'fixed', top:`${after ? rect.bottom : rect.top}px`,
+      left:`${listRect.left + 8}px`, width:`${listRect.width - 16}px`
+    });
+
+    _peDragState = { secUid, refUid: best.dataset.uid, after };
+  }
+
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    ghost.remove();
+    rowEl.style.opacity = '';
+    _peIndicator.classList.add('hidden');
+
+    if (_peDragState) {
+      const { secUid: mUid, refUid, after } = _peDragState;
+      const srcIdx = _peSections.findIndex(s => s.uid === mUid);
+      const [moved] = _peSections.splice(srcIdx, 1);
+      let dstIdx = _peSections.findIndex(s => s.uid === refUid);
+      if (after) dstIdx += 1;
+      _peSections.splice(dstIdx, 0, moved);
+      _peDragState = null;
+      renderPeSections();
+    }
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+
+// ══════════════════════════════════════════════════════
+// THEME PALETTES
+// ══════════════════════════════════════════════════════
+const THEME_PALETTES = {
+  header:     ['#16a085','#27ae60','#2980b9','#8e44ad','#2c3e50','#f39c12','#d35400','#c0392b','#bdc3c7','#7f8c8d'],
+  background: ['#1abc9c','#2ecc71','#3498db','#9b59b6','#34495e','#f1c40f','#e67e22','#e74c3c','#ecf0f1','#95a5a6'],
+  border:     ['#107864','#1d8248','#1f608b','#6a3382','#212e3c','#b6750e','#9e3f00','#902b20','#8e9295','#5f696a'],
+  block:      ['#8cdece','#96e6b8','#9acced','#cdacda','#9aa4ae','#f8e287','#f2be90','#f3a69e','#f6f8f8','#cad2d2'],
+};
+
+function initThemePalettes() {
+  Object.entries(THEME_PALETTES).forEach(([key, colors]) => {
+    const container = document.getElementById(`palette-${key}`);
+    container.innerHTML = "";
+    if (!container) return;
+    colors.forEach(color => {
+      const swatch = document.createElement('div');
+      swatch.className = 'color-swatch';
+      swatch.style.background = color;
+      swatch.title = color;
+      swatch.dataset.key = key;
+      swatch.dataset.color = color;
+      if (appState.theme[key] === color) swatch.classList.add('selected');
+      swatch.addEventListener('click', () => selectThemeColor(key, color));
+      container.appendChild(swatch);
+    });
+  });
+  applyThemePreview();
+}
+
+function selectThemeColor(key, color) {
+  appState.theme[key] = color;
+  commit();
+
+  // Update selected state in palette
+  document.querySelectorAll(`.color-swatch[data-key="${key}"]`).forEach(s => {
+    s.classList.toggle('selected', s.dataset.color === color);
+  });
+
+  // Update preview dot
+  const preview = document.getElementById(`preview-${key}`);
+  if (preview) preview.style.background = color;
+
+  applyThemePreview();
+}
+
+function applyThemePreview() {
+  const t = appState.theme;
+  const stripHeader = document.getElementById('strip-header');
+  const stripBg     = document.getElementById('strip-bg');
+  const stripB1     = document.getElementById('strip-block1');
+  const stripHr     = document.getElementById('strip-hr');
+  if (stripHeader) stripHeader.style.background = t.header;
+  if (stripBg)     stripBg.style.background     = t.background;
+  if (stripB1)  { stripB1.style.background = t.block; stripB1.style.borderColor = t.border; }
+  if (stripHr)    stripHr.style.borderTopColor  = t.border;
+
+  // Also keep strip name in sync
+  const stripName = document.getElementById('strip-name');
+  const appName   = document.getElementById('app-name');
+  if (stripName && appName) stripName.textContent = appName.value || '';
+}
+
+// ─── START ───
+
+// ── Icon upload ────────────────────────────────────────────────────────────────
+function handleIconUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const item = findBlock(selectedUid);
+    if (!item) return;
+    item.icon = e.target.result;
+    commit();
+    const img = document.getElementById('icon-preview-img');
+    const ph  = document.getElementById('icon-preview-placeholder');
+    img.src = e.target.result;
+    img.classList.remove('hidden');
+    ph.classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Cover upload ────────────────────────────────────────────────────────────────
+function handleCoverUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const item = findBlock(selectedUid);
+    if (!item) return;
+    item.cover = e.target.result;
+    commit();
+    const img = document.getElementById('cover-preview-img');
+    const ph  = document.getElementById('cover-preview-placeholder');
+    img.src = e.target.result;
+    img.classList.remove('hidden');
+    ph.classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Block Config Modal ────────────────────────────────────────────────────────
+function openBlockConfigModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  const def = BLOCKS.find(b => b.id === item.blockId);
+  if (def.id === 'page')  { openPageEditor();  return; }
+  if (def.id === 'lista')      { openListEditor();       return; }
+  if (def.id === 'formulario') { openFormEditor();       return; }
+  if (def.id === 'dashboard')  { openDashEditor();      return; }
+
+  document.getElementById('bcm-block-name').textContent = def.label;
+  const iconBg = document.getElementById('bcm-icon-bg');
+  const iconEl = document.getElementById('bcm-icon-el');
+  iconBg.style.cssText = `background:${def.color}18;color:${def.color}`;
+  iconEl.setAttribute('data-lucide', def.icon);
+
+  const fields = document.getElementById('bcm-fields');
+  fields.innerHTML = '';
+
+  if (def.extra.length === 0) {
+    fields.innerHTML = `<p class="text-sm text-center py-8" style="color:var(--muted)">Este bloco não possui configurações específicas.</p>`;
+  } else {
+    def.extra.forEach(field => {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '16px';
+      const val = item.config[field.key] || '';
+
+      if (field.type === 'html_full' || field.type === 'html_simple') {
+        const hasHeadings = field.type === 'html_full';
+        const editorId  = `bcm-editor-${field.key}`;
+        const sourceId  = `bcm-source-${field.key}`;
+        const toggleId  = `bcm-toggle-${field.key}`;
+
+        const headingBtns = hasHeadings ? `
+          <button class="toolbar-btn" onclick="editorFormat('h1','${editorId}')">H1</button>
+          <button class="toolbar-btn" onclick="editorFormat('h2','${editorId}')">H2</button>
+          <button class="toolbar-btn" onclick="editorFormat('h3','${editorId}')">H3</button>
+          <div style="width:1px;background:var(--border);margin:0 2px"></div>` : '';
+
+        wrap.innerHTML = `
+          <p class="field-label">${field.label}</p>
+          <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <div class="editor-toolbar" style="border:none;border-bottom:1px solid var(--border)">
+              <button class="toolbar-btn" onclick="editorExec('bold','${editorId}')"><b>B</b></button>
+              ${headingBtns}
+              <button class="toolbar-btn" onclick="editorExec('insertUnorderedList','${editorId}')">&#8226; Lista</button>
+              <button class="toolbar-btn" onclick="editorExec('insertOrderedList','${editorId}')">1. Lista</button>
+              <div style="width:1px;background:var(--border);margin:0 2px"></div>
+              <button class="toolbar-btn" onclick="editorInsertLink('${editorId}')">&#128279;</button>
+              <button class="toolbar-btn" id="${toggleId}" onclick="toggleBcmSource('${editorId}','${sourceId}','${toggleId}')" style="margin-left:auto">&#60;/&#62;</button>
+            </div>
+            <div id="${editorId}" class="html-editable" contenteditable="true" spellcheck="false"
+              style="min-height:100px;border-radius:0;flex:none">${val}</div>
+            <textarea id="${sourceId}" class="field-input hidden"
+              style="border-radius:0;border:none;border-top:1px solid var(--border);resize:none;font-family:monospace;font-size:12px"
+              data-key="${field.key}" rows="5"></textarea>
+          </div>
+        `;
+      } else if (field.type === 'textarea') {
+        wrap.innerHTML = `<p class="field-label">${field.label}</p>
+          <textarea class="field-input" data-key="${field.key}" rows="3" placeholder="${field.placeholder}">${val}</textarea>`;
+      } else {
+        wrap.innerHTML = `<p class="field-label">${field.label}</p>
+          <input class="field-input" data-key="${field.key}" type="${field.type}" placeholder="${field.placeholder}" value="${val}">`;
+      }
+
+      fields.appendChild(wrap);
+    });
+  }
+
+  document.getElementById('block-config-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function toggleBcmSource(editorId, sourceId, toggleId) {
+  const editable = document.getElementById(editorId);
+  const source   = document.getElementById(sourceId);
+  const btn      = document.getElementById(toggleId);
+  const isSource = !source.classList.contains('hidden');
+  if (isSource) {
+    editable.innerHTML = source.value;
+    source.classList.add('hidden');
+    editable.classList.remove('hidden');
+    btn.classList.remove('active');
+  } else {
+    source.value = editable.innerHTML;
+    editable.classList.add('hidden');
+    source.classList.remove('hidden');
+    btn.classList.add('active');
+  }
+}
+
+function closeBlockConfigModal(e) {
+  if (e && e.target !== document.getElementById('block-config-modal')) return;
+  document.getElementById('block-config-modal').classList.add('hidden');
+}
+
+function saveBlockConfigModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  const def = BLOCKS.find(b => b.id === item.blockId);
+
+  (def.extra || []).forEach(field => {
+    if (field.type === 'html_full' || field.type === 'html_simple') {
+      const editorId = `bcm-editor-${field.key}`;
+      const sourceId = `bcm-source-${field.key}`;
+      const source   = document.getElementById(sourceId);
+      const editable = document.getElementById(editorId);
+      if (!editable) return;
+      // If source mode is active, sync back
+      if (source && !source.classList.contains('hidden')) {
+        editable.innerHTML = source.value;
+      }
+      const allowedTags = field.type === 'html_full'
+        ? ['B','STRONG','H1','H2','H3','A','UL','OL','LI','BR','P']
+        : ['B','STRONG','A','UL','OL','LI','BR','P'];
+      item.config[field.key] = sanitizeHtml(editable.innerHTML, allowedTags);
+    } else {
+      const el = document.querySelector(`#bcm-fields [data-key="${field.key}"]`);
+      if (el) item.config[field.key] = el.value;
+    }
+  });
+
+  commit();
+  document.getElementById('block-config-modal').classList.add('hidden');
+}
+
+// ── Content Modal ─────────────────────────────────────────────────────────────
+let _cmSourceMode = false;
+
+function openContentModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  const def = BLOCKS.find(b => b.id === item.blockId);
+
+  // Header
+  const cmIconBg = document.getElementById('cm-icon-bg');
+  const cmIconEl = document.getElementById('cm-icon-el');
+  document.getElementById('cm-block-name').textContent = item.title || def.label;
+  cmIconBg.style.cssText = `background:${def.color}18;color:${def.color}`;
+  cmIconEl.setAttribute('data-lucide', def.icon);
+
+  // Populate fields
+  document.getElementById('cm-content-title').value    = item.contentTitle    || '';
+  document.getElementById('cm-content-subtitle').value = item.contentSubtitle || '';
+  document.getElementById('cm-photo-position').value   = item.photoPosition   || 'side';
+
+  // Profile photo
+  const cmPhotoEmpty   = document.getElementById('cm-photo-empty');
+  const cmPhotoPreview = document.getElementById('cm-photo-preview');
+  const cmPhotoImg     = document.getElementById('cm-photo-img');
+  if (item.profilePhoto) {
+    cmPhotoImg.src = item.profilePhoto;
+    cmPhotoPreview.classList.remove('hidden'); cmPhotoPreview.classList.add('flex');
+    cmPhotoEmpty.classList.add('hidden');
+  } else {
+    cmPhotoPreview.classList.add('hidden'); cmPhotoPreview.classList.remove('flex');
+    cmPhotoEmpty.classList.remove('hidden');
+  }
+  document.getElementById('cm-photo-upload').value = '';
+
+  // Intro editor
+  _cmSourceMode = false;
+  const editable = document.getElementById('cm-editable');
+  const source   = document.getElementById('cm-source');
+  editable.innerHTML = item.intro || '';
+  source.value = item.intro || '';
+  editable.classList.remove('hidden');
+  source.classList.add('hidden');
+  document.getElementById('cm-source-toggle').classList.remove('active');
+
+  // Cover image
+  const coverImg = document.getElementById('cover-preview-img');
+  const coverPh  = document.getElementById('cover-preview-placeholder');
+  if (item.cover) {
+    coverImg.src = item.cover; coverImg.classList.remove('hidden'); coverPh.classList.add('hidden');
+  } else {
+    coverImg.src = ''; coverImg.classList.add('hidden'); coverPh.classList.remove('hidden');
+  }
+  document.getElementById('cover-upload').value = '';
+
+  document.getElementById('content-modal').classList.remove('hidden');
+  lucide.createIcons();
+  setTimeout(() => editable.focus(), 50);
+}
+
+function closeContentModal(e) {
+  if (e && e.target !== document.getElementById('content-modal')) return;
+  document.getElementById('content-modal').classList.add('hidden');
+}
+
+function saveContentModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  const def = BLOCKS.find(b => b.id === item.blockId);
+
+  item.contentTitle    = document.getElementById('cm-content-title').value;
+  item.contentSubtitle = document.getElementById('cm-content-subtitle').value;
+  item.photoPosition   = document.getElementById('cm-photo-position').value;
+
+  // Intro
+  if (_cmSourceMode) {
+    document.getElementById('cm-editable').innerHTML = document.getElementById('cm-source').value;
+  }
+  item.intro = sanitizeHtml(document.getElementById('cm-editable').innerHTML);
+
+  commit();
+  renderCanvas();
+  renderOrganize();
+  document.getElementById('content-modal').classList.add('hidden');
+}
+
+function toggleCmSource() {
+  _cmSourceMode = !_cmSourceMode;
+  const editable = document.getElementById('cm-editable');
+  const source   = document.getElementById('cm-source');
+  const btn      = document.getElementById('cm-source-toggle');
+  if (_cmSourceMode) {
+    source.value = editable.innerHTML;
+    editable.classList.add('hidden'); source.classList.remove('hidden'); btn.classList.add('active');
+  } else {
+    editable.innerHTML = source.value;
+    source.classList.add('hidden'); editable.classList.remove('hidden'); btn.classList.remove('active');
+  }
+}
+
+function handleCmPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const item = findBlock(selectedUid);
+    if (!item) return;
+    item.profilePhoto = e.target.result;
+    const cmPhotoImg     = document.getElementById('cm-photo-img');
+    const cmPhotoPreview = document.getElementById('cm-photo-preview');
+    const cmPhotoEmpty   = document.getElementById('cm-photo-empty');
+    cmPhotoImg.src = e.target.result;
+    cmPhotoPreview.classList.remove('hidden'); cmPhotoPreview.classList.add('flex');
+    cmPhotoEmpty.classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCmPhoto() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  item.profilePhoto = null;
+  document.getElementById('cm-photo-img').src = '';
+  document.getElementById('cm-photo-preview').classList.add('hidden');
+  document.getElementById('cm-photo-preview').classList.remove('flex');
+  document.getElementById('cm-photo-empty').classList.remove('hidden');
+  document.getElementById('cm-photo-upload').value = '';
+}
+
+// ── Profile photo ──────────────────────────────────────────────────────────────
+function handleProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const item = findBlock(selectedUid);
+    if (!item) return;
+    item.profilePhoto = e.target.result;
+    commit();
+    const previewWrap = document.getElementById('profile-photo-preview-wrap');
+    const emptyWrap   = document.getElementById('profile-photo-wrap-empty');
+    const previewImg  = document.getElementById('profile-photo-preview-img');
+    previewImg.src = e.target.result;
+    previewWrap.classList.remove('hidden'); previewWrap.classList.add('flex');
+    emptyWrap.classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeProfilePhoto() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  item.profilePhoto = null;
+  commit();
+  document.getElementById('profile-photo-preview-wrap').classList.add('hidden');
+  document.getElementById('profile-photo-preview-wrap').classList.remove('flex');
+  document.getElementById('profile-photo-wrap-empty').classList.remove('hidden');
+  document.getElementById('profile-photo-upload').value = '';
+}
+
+// ── Intro preview label ────────────────────────────────────────────────────────
+function updateIntroPreview(item) {
+  const label = document.getElementById('block-intro-preview');
+  if (!label) return;
+  if (item && item.intro) {
+    // Strip tags for preview text
+    const div = document.createElement('div');
+    div.innerHTML = item.intro;
+    const text = (div.textContent || '').trim().slice(0, 50);
+    label.textContent = text || 'Clique para editar...';
+    label.style.color = text ? 'var(--text)' : 'var(--muted)';
+  } else {
+    label.textContent = 'Clique para editar...';
+    label.style.color = 'var(--muted)';
+  }
+}
+
+// ── HTML Editor Modal ──────────────────────────────────────────────────────────
+let _htmlSourceMode = false;
+
+function openHtmlModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  _htmlSourceMode = false;
+  const editable = document.getElementById('html-editable');
+  const source   = document.getElementById('html-source');
+  editable.innerHTML = item.intro || '';
+  source.value = item.intro || '';
+  editable.classList.remove('hidden');
+  source.classList.add('hidden');
+  document.getElementById('html-source-toggle').classList.remove('active');
+  document.getElementById('html-editor-modal').classList.remove('hidden');
+  setTimeout(() => editable.focus(), 50);
+}
+
+function closeHtmlModal(e) {
+  if (e && e.target !== document.getElementById('html-editor-modal')) return;
+  document.getElementById('html-editor-modal').classList.add('hidden');
+}
+
+function saveHtmlModal() {
+  const item = findBlock(selectedUid);
+  if (!item) return;
+  if (_htmlSourceMode) {
+    // Sync from source textarea → editable
+    const src = document.getElementById('html-source').value;
+    document.getElementById('html-editable').innerHTML = src;
+  }
+  // Sanitize: only allow b, h1-h3, a, ul, ol, li — strip everything else
+  const editable = document.getElementById('html-editable');
+  item.intro = sanitizeHtml(editable.innerHTML);
+  commit();
+  updateIntroPreview(item);
+  document.getElementById('html-editor-modal').classList.add('hidden');
+}
+
+function sanitizeHtml(html, allowed) {
+  allowed = allowed || ['B','STRONG','H1','H2','H3','A','UL','OL','LI','BR','P'];
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  function clean(node) {
+    [...node.childNodes].forEach(child => {
+      if (child.nodeType === Node.TEXT_NODE) return;
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        if (!allowed.includes(child.tagName)) {
+          // Replace with its children
+          while (child.firstChild) node.insertBefore(child.firstChild, child);
+          child.remove();
+        } else {
+          // Keep only safe attributes
+          [...child.attributes].forEach(attr => {
+            if (child.tagName === 'A' && attr.name === 'href') return;
+            child.removeAttribute(attr.name);
+          });
+          clean(child);
+        }
+      } else {
+        child.remove();
+      }
+    });
+  }
+  clean(div);
+  return div.innerHTML;
+}
+
+function toggleHtmlSource() {
+  _htmlSourceMode = !_htmlSourceMode;
+  const editable = document.getElementById('html-editable');
+  const source   = document.getElementById('html-source');
+  const btn      = document.getElementById('html-source-toggle');
+  if (_htmlSourceMode) {
+    source.value = editable.innerHTML;
+    editable.classList.add('hidden');
+    source.classList.remove('hidden');
+    btn.classList.add('active');
+  } else {
+    editable.innerHTML = source.value;
+    source.classList.add('hidden');
+    editable.classList.remove('hidden');
+    btn.classList.remove('active');
+  }
+}
+
+function editorExec(cmd, targetId) {
+  const el = document.getElementById(targetId || 'html-editable');
+  el.focus();
+  document.execCommand(cmd, false, null);
+}
+
+function editorFormat(tag, targetId) {
+  const el = document.getElementById(targetId || 'html-editable');
+  el.focus();
+  document.execCommand('formatBlock', false, tag);
+}
+
+function editorInsertLink(targetId) {
+  const url = prompt('URL do link:', 'https://');
+  if (!url) return;
+  const el = document.getElementById(targetId || 'html-editable');
+  el.focus();
+  document.execCommand('createLink', false, url);
+}
+
+init();
+</script>
+</body>
+</html>
